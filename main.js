@@ -1,17 +1,11 @@
 // main.js (FULL REPLACE)
-// archi-law-cl-03 (1~2단계 고도화)
-// - 자동찾기(후보 패널/버튼) 제거 ✅
-// - 자치법규만 고도화 ✅ (추천 TOP 표시)
-// - 법제처 검색 링크 기반 / 저장은 localStorage
-//
-// ✅ FIX(중요):
-// - 열기 버튼이 법제처 "메인"으로만 가는 문제 해결
-//   * 상위법: https://www.law.go.kr/lsSc.do?query=...
-//   * 자치법규: https://www.law.go.kr/ordinSc.do?...&query=...
-
-/* =========================
-   데이터
-========================= */
+// archi-law-cl-03 (상위법/자치법규 링크 안정화 + 불필요 UI 제거)
+// ✅ 변경점
+// 1) "열기" 링크를 law.go.kr 검색결과 화면으로 직접 연결
+//    - 상위법: /lsSc.do?query=법령명
+//    - 자치법규: /ordinSc.do?...&query=시도 시군구 조례
+// 2) 추천/점수/(검색)/나머지 후보 완전 제거
+// 3) 토픽 키워드는 "표시"만 하고, 검색어에 섞지 않음(검색 0건 방지)
 
 const SIDO_LIST = [
     "서울특별시","부산광역시","대구광역시","인천광역시","광주광역시","대전광역시","울산광역시","세종특별자치시",
@@ -187,7 +181,6 @@ const SIDO_LIST = [
   ========================= */
   
   const LS_KEY = "archiLawCl03.library.v1";
-  
   function $(id) { return document.getElementById(id); }
   function clean(s) { return String(s ?? "").trim(); }
   function uniq(arr) { return [...new Set((arr ?? []).filter(Boolean))]; }
@@ -244,34 +237,35 @@ const SIDO_LIST = [
   }
   
   /* =========================
-     법제처 링크 (검색)  ✅ FIX
+     law.go.kr 링크(검색결과로 직접)
   ========================= */
   
-  // ✅ 상위법(법령/행정규칙/판례 등 통합검색)
-  function lawSearchUrl(query) {
+  // ✅ 상위법(법령) 검색 결과
+  function lawSearchUrlAct(query) {
     const q = encodeURIComponent(query);
     return `https://www.law.go.kr/lsSc.do?query=${q}`;
   }
   
-  // ✅ 자치법규(조례/규칙 검색)
-  function ordinanceSearchUrl(query) {
+  // ✅ 자치법규 검색 결과(자치법규 탭)
+  function lawSearchUrlOrdin(query) {
     const q = encodeURIComponent(query);
-    // menuId/subMenuId/tabMenuId는 "자치법규 > 현행 자치법규 > 법규명" 탭을 여는 파라미터
+    // 현재 사이트에서 자치법규 검색 화면으로 바로 들어가는 파라미터 조합(안정)
     return `https://www.law.go.kr/ordinSc.do?menuId=3&subMenuId=27&tabMenuId=139&query=${q}`;
   }
   
-  function buildOrdinanceQuery({ sido, sigungu, kw, useLabel }) {
+  function buildUpperLawQuery(lawName) {
+    // ✅ 토픽/키워드 섞지 말고 "법령명"만 검색
+    return `${lawName}`.trim();
+  }
+  
+  function buildOrdinanceQueryBase({ sido, sigungu }) {
+    // ✅ 너무 길게 만들지 말고 결과가 잘 나오는 베이스 쿼리
+    //    (키워드는 UI에만 보여주고, 필요하면 사용자가 법제처에서 추가검색/본문검색)
     const parts = [];
     if (sido) parts.push(sido);
     if (sigungu) parts.push(sigungu);
-    if (kw) parts.push(kw);
-    if (useLabel) parts.push(useLabel);
     parts.push("조례");
     return parts.join(" ");
-  }
-  
-  function buildUpperLawQuery(lawName, topicLabel) {
-    return `${lawName} ${topicLabel}`.trim();
   }
   
   /* =========================
@@ -332,7 +326,7 @@ const SIDO_LIST = [
   }
   
   /* =========================
-     시군구: select 우선(현재 UI 기준)
+     시군구: select 우선
   ========================= */
   
   function getSigunguValue() {
@@ -359,8 +353,7 @@ const SIDO_LIST = [
         list.map((x) => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
     }
   
-    // 구버전 datalist 호환
-    const dl = $("dlSigungu");
+    const dl = $("dlSigungu"); // 구버전 datalist 호환
     if (dl) dl.innerHTML = list.map((x) => `<option value="${escapeHtml(x)}"></option>`).join("");
   }
   
@@ -465,22 +458,6 @@ const SIDO_LIST = [
     return el;
   }
   
-  /* =========================
-     자치법규 추천(Top) 스코어링
-  ========================= */
-  function scoreOrdinanceCandidate({ kw, useLabel, topic }) {
-    let score = 0;
-  
-    if (topic?.ordinKeywords?.includes(kw)) score += 30;
-    if (topic?.label && kw && topic.label.includes(kw)) score += 10;
-    if (useLabel && useLabel !== "(미선택)") score += 8;
-  
-    const tooBroad = ["건축", "안전", "대지", "건축물"];
-    if (tooBroad.includes(kw)) score -= 6;
-  
-    return score;
-  }
-  
   function renderResultLists(ctx) {
     const { sido, sigungu, useLabel, topic } = ctx;
     setCtxBar({ sido, sigungu, useLabel, topicLabel: topic.label });
@@ -496,14 +473,18 @@ const SIDO_LIST = [
   
     const seen = new Set();
   
-    // 상위법
+    const topicKeywordsPreview = uniq(topic.keywords).slice(0, 4).join(", ");
+  
+    // =======================
+    // 상위법(법령명만 검색)
+    // =======================
     if (upperList) {
       if (!includeAct) {
         upperList.innerHTML = `<div class="hint">상위법 표시가 꺼져있습니다.</div>`;
       } else {
         topic.upperLaws.forEach((lawName) => {
-          const q = buildUpperLawQuery(lawName, topic.label);
-          const url = lawSearchUrl(q); // ✅ FIX
+          const q = buildUpperLawQuery(lawName);
+          const url = lawSearchUrlAct(q);
           const id = makeSourceId({ type: "상위법", name: lawName, jurisdiction: "-" });
           const dup = seen.has(id);
           if (!dup) seen.add(id);
@@ -511,10 +492,11 @@ const SIDO_LIST = [
           upperList.appendChild(
             renderItem({
               title: lawName,
-              subtitle: q,
+              subtitle: `법령명 검색: ${q}`,
               meta: [
                 { text: "상위법", cls: "good" },
                 { text: `토픽:${topic.label}` },
+                topicKeywordsPreview ? { text: `키워드:${topicKeywordsPreview}` } : null,
                 useLabel !== "(미선택)" ? { text: `용도:${useLabel}` } : null,
                 dup ? { text: "중복(묶임)", cls: "warn" } : null,
               ],
@@ -536,102 +518,64 @@ const SIDO_LIST = [
       }
     }
   
-    // 자치법규 (추천 TOP 상단 고정)
+    // =======================
+    // 자치법규(베이스 쿼리로만 검색)
+    // =======================
     if (ordinList) {
       if (!includeOrdin) {
         ordinList.innerHTML = `<div class="hint">자치법규 표시가 꺼져있습니다.</div>`;
       } else {
+        const jurisdiction = `${sido} ${sigungu}`;
+        const baseQuery = buildOrdinanceQueryBase({ sido, sigungu });
+        const urlBase = lawSearchUrlOrdin(baseQuery);
+  
+        // 1) “조례(지자체) 기본 검색” 1개
+        ordinList.appendChild(
+          renderItem({
+            title: `${jurisdiction} 조례(자치법규)`,
+            subtitle: `자치법규 검색: ${baseQuery}`,
+            meta: [
+              { text: "자치법규", cls: "good" },
+              { text: `지자체:${sigungu}` },
+              topicKeywordsPreview ? { text: `키워드:${topicKeywordsPreview}` } : null,
+            ],
+            actions: [
+              { label: "열기", onClick: () => window.open(urlBase, "_blank", "noopener,noreferrer") },
+              { label: "복사", onClick: () => copyToClipboard(urlBase) },
+              {
+                label: "저장",
+                onClick: () => {
+                  upsertSource({
+                    type: "자치법규",
+                    name: `${jurisdiction} 조례`,
+                    jurisdiction,
+                    query: baseQuery,
+                    url: urlBase,
+                    topicLabel: topic.label,
+                    useLabel,
+                  });
+                  toast("저장됨");
+                  renderLibrary();
+                },
+              },
+            ],
+          })
+        );
+  
+        // 2) 키워드들은 “검색용이 아니라 참고용”으로만 카드에 나열(열기 버튼 없음)
         const kws = uniq(topic.ordinKeywords);
-  
-        const candidates = kws.map((kw) => ({
-          kw,
-          score: scoreOrdinanceCandidate({ kw, useLabel, topic }),
-        }))
-        .sort((a, b) => b.score - a.score);
-  
-        const top = candidates.slice(0, 2);
-        const rest = candidates.slice(2);
-  
-        top.forEach(({ kw, score }) => {
-          const q = buildOrdinanceQuery({ sido, sigungu, kw, useLabel: useLabel !== "(미선택)" ? useLabel : "" });
-          const url = ordinanceSearchUrl(q); // ✅ FIX
-          const name = `${kw} 관련 조례/규칙(검색)`;
-          const jurisdiction = `${sido} ${sigungu}`;
-          const id = makeSourceId({ type: "자치법규", name, jurisdiction });
-          const dup = seen.has(id);
-          if (!dup) seen.add(id);
-  
+        if (kws.length) {
           ordinList.appendChild(
             renderItem({
-              title: name,
-              subtitle: q,
-              meta: [
-                { text: "추천 TOP", cls: "warn" },
-                { text: "자치법규", cls: "good" },
-                { text: `지자체:${sigungu}` },
-                { text: `키워드:${kw}` },
-                { text: `점수:${score}` },
-                dup ? { text: "중복(묶임)", cls: "warn" } : null,
-              ],
+              title: "참고 키워드(본문에서 찾기)",
+              subtitle: "※ 법제처 화면에서 ‘조문내용/본문 검색’에 아래 키워드를 사용하면 됩니다.",
+              meta: kws.slice(0, 12).map((kw) => ({ text: kw })),
               actions: [
-                { label: "열기", onClick: () => window.open(url, "_blank", "noopener,noreferrer") },
-                { label: "복사", onClick: () => copyToClipboard(url) },
-                {
-                  label: "저장",
-                  onClick: () => {
-                    upsertSource({ type: "자치법규", name, jurisdiction, query: q, url, topicLabel: topic.label, useLabel });
-                    toast("저장됨");
-                    renderLibrary();
-                  },
-                },
+                { label: "키워드 복사", onClick: () => copyToClipboard(kws.join(", ")) },
               ],
             })
           );
-        });
-  
-        if (rest.length > 0) {
-          const sep = document.createElement("div");
-          sep.className = "hint";
-          sep.style.margin = "6px 2px 2px";
-          sep.textContent = "나머지 후보";
-          ordinList.appendChild(sep);
         }
-  
-        rest.forEach(({ kw, score }) => {
-          const q = buildOrdinanceQuery({ sido, sigungu, kw, useLabel: useLabel !== "(미선택)" ? useLabel : "" });
-          const url = ordinanceSearchUrl(q); // ✅ FIX
-          const name = `${kw} 관련 조례/규칙(검색)`;
-          const jurisdiction = `${sido} ${sigungu}`;
-          const id = makeSourceId({ type: "자치법규", name, jurisdiction });
-          const dup = seen.has(id);
-          if (!dup) seen.add(id);
-  
-          ordinList.appendChild(
-            renderItem({
-              title: name,
-              subtitle: q,
-              meta: [
-                { text: "자치법규", cls: "good" },
-                { text: `지자체:${sigungu}` },
-                { text: `키워드:${kw}` },
-                { text: `점수:${score}` },
-                dup ? { text: "중복(묶임)", cls: "warn" } : null,
-              ],
-              actions: [
-                { label: "열기", onClick: () => window.open(url, "_blank", "noopener,noreferrer") },
-                { label: "복사", onClick: () => copyToClipboard(url) },
-                {
-                  label: "저장",
-                  onClick: () => {
-                    upsertSource({ type: "자치법규", name, jurisdiction, query: q, url, topicLabel: topic.label, useLabel });
-                    toast("저장됨");
-                    renderLibrary();
-                  },
-                },
-              ],
-            })
-          );
-        });
       }
     }
   }
@@ -717,9 +661,8 @@ const SIDO_LIST = [
     on($("btnCopyQuery"), "click", async () => {
       const v = validateInputs();
       if (!v.ok) return toast("먼저 시도/시군구/토픽을 선택해줘.");
-      const { sido, sigungu, useLabel, topic } = v.ctx;
-      const kw = topic.ordinKeywords?.[0] ?? topic.keywords?.[0] ?? topic.label;
-      const q = buildOrdinanceQuery({ sido, sigungu, kw, useLabel: useLabel !== "(미선택)" ? useLabel : "" });
+      const { sido, sigungu } = v.ctx;
+      const q = buildOrdinanceQueryBase({ sido, sigungu });
       await copyToClipboard(q);
     });
   
