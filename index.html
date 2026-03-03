@@ -1,171 +1,136 @@
 <!doctype html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>archi-law-cl-03 | 건축 토픽엔진 (법제처)</title>
-    <link rel="stylesheet" href="./style.css" />
-  </head>
-  <body>
-    <header class="topbar">
-      <div class="brand">
-        <div class="logo">A</div>
-        <div class="brandText">
-          <div class="name">archi-law-cl-03</div>
-          <div class="sub">지자체 + 용도 + 토픽 → 법제처 링크 모음</div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>archi-law-cl-03 | 건축 토픽엔진</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">A</div>
+    <div class="brandText">
+      <div class="name">archi-law-cl-03</div>
+    </div>
+  </div>
+  <button id="btnReset" class="btn danger">초기화</button>
+</header>
+
+<main class="layout">
+
+  <!-- 🔵 LEFT COLUMN -->
+  <div class="leftColumn">
+
+    <!-- 선택 -->
+    <section class="card compact">
+      <h2>선택</h2>
+
+      <div class="row3">
+
+        <div class="field">
+          <div class="fieldLabel">시도 *</div>
+          <select id="selSido" class="select"></select>
+        </div>
+
+        <div class="field">
+          <div class="fieldLabel">시군구 *</div>
+          <!-- ✅ select 방식으로 변경 -->
+          <select id="selSigungu" class="select">
+            <option value="">(시군구 선택)</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <div class="fieldLabel">건축물 용도</div>
+          <select id="selUse" class="select"></select>
+        </div>
+
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <div class="fieldLabel">토픽 *</div>
+          <select id="selTopic" class="select"></select>
         </div>
       </div>
 
-      <div class="topActions">
-        <button id="btnReset" class="btn danger" title="로컬 저장소 초기화">초기화</button>
+      <div class="row split">
+        <button id="btnBuild" class="btn primary">결과 생성</button>
+        <button id="btnAutoFind" class="btn">자동찾기</button>
       </div>
-    </header>
 
-    <main class="layout">
-      <!-- LEFT: Controls -->
-      <section class="card">
-        <div class="cardHead">
-          <h2>선택</h2>
-          <p class="muted">지자체(필수) + 용도(선택) + 토픽(필수)</p>
+      <div class="row toggles">
+        <label><input id="chkIncludeAct" type="checkbox" checked /> 상위법 포함</label>
+        <label><input id="chkIncludeOrdin" type="checkbox" checked /> 자치법규 포함</label>
+      </div>
+    </section>
+
+    <!-- 저장소 (선택창 아래로 이동) -->
+    <section class="card">
+      <h2>저장소</h2>
+
+      <div class="row split">
+        <input id="inpFilter" class="input" placeholder="검색…" />
+        <button id="btnClearFilter" class="btn ghost">지우기</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="k">소스</div>
+          <div class="v" id="statSources">0</div>
         </div>
-
-        <div class="form">
-          <!-- ✅ 가로 1줄 배치: 시도/시군구/용도 -->
-          <div class="row">
-            <label class="label">지자체/용도</label>
-
-            <div class="row3">
-              <div class="field">
-                <div class="fieldLabel">시도 <span class="req">필수</span></div>
-                <select id="selSido" class="select"></select>
-              </div>
-
-              <div class="field">
-                <div class="fieldLabel">시군구 <span class="req">필수</span></div>
-                <input
-                  id="inpSigungu"
-                  class="input"
-                  list="dlSigungu"
-                  placeholder="시군구 선택/입력"
-                  autocomplete="off"
-                />
-                <datalist id="dlSigungu"></datalist>
-              </div>
-
-              <div class="field">
-                <div class="fieldLabel">건축물 용도 <span class="opt">선택</span></div>
-                <select id="selUse" class="select"></select>
-              </div>
-            </div>
-
-            <div class="hint">
-              * 시군구는 전체 목록 제공(가나다순) + 직접 입력 가능. 시도 변경 시 시군구는 자동 초기화.
-            </div>
-          </div>
-
-          <div class="row">
-            <label class="label">토픽 <span class="req">필수</span></label>
-            <select id="selTopic" class="select"></select>
-          </div>
-
-          <div class="row split">
-            <button id="btnBuild" class="btn primary">결과 생성</button>
-            <button id="btnAutoFind" class="btn">자치법규 자동찾기</button>
-          </div>
-
-          <div class="divider"></div>
-
-          <div class="row">
-            <label class="label">법제처 검색 옵션</label>
-            <div class="toggleRow">
-              <input id="chkIncludeAct" type="checkbox" checked />
-              <label for="chkIncludeAct">상위법(법령) 포함</label>
-            </div>
-            <div class="toggleRow">
-              <input id="chkIncludeOrdin" type="checkbox" checked />
-              <label for="chkIncludeOrdin">자치법규(조례/규칙) 포함</label>
-            </div>
-          </div>
+        <div class="stat">
+          <div class="k">토픽 태그</div>
+          <div class="v" id="statTags">0</div>
         </div>
-      </section>
+      </div>
 
-      <!-- CENTER: Results -->
-      <section class="card">
-        <div class="cardHead">
-          <h2>결과</h2>
-          <p class="muted">선택한 조건으로 법제처 검색 링크를 생성합니다.</p>
-        </div>
+      <div id="libList" class="libList"></div>
+    </section>
 
-        <div id="ctxBar" class="ctxBar">
-          <div class="ctxLeft">
-            <span class="badge" id="bSido">-</span>
-            <span class="badge" id="bSigungu">-</span>
-            <span class="badge soft" id="bUse">용도: (미선택)</span>
-            <span class="badge soft" id="bTopic">토픽: -</span>
-          </div>
-          <div class="ctxRight">
-            <button id="btnCopyQuery" class="btn ghost">검색어 복사</button>
-          </div>
-        </div>
+  </div>
 
-        <div class="grid2">
-          <div class="panel">
-            <div class="panelHead">
-              <h3>상위법(전국 공통)</h3>
-              <span class="tag">법제처</span>
-            </div>
-            <div id="upperList" class="list"></div>
-          </div>
+  <!-- 🔴 RIGHT COLUMN (결과 크게) -->
+  <div class="rightColumn">
 
-          <div class="panel">
-            <div class="panelHead">
-              <h3>자치법규(해당 지자체)</h3>
-              <span class="tag">법제처</span>
-            </div>
-            <div id="ordinList" class="list"></div>
-          </div>
-        </div>
+    <section class="card bigResult">
 
-        <div class="panel" style="margin-top: 14px">
-          <div class="panelHead">
-            <h3>자동찾기(검색 후보)</h3>
-            <span class="tag">키워드</span>
-          </div>
-          <div id="candidateBox" class="candidateBox"></div>
-        </div>
-      </section>
+      <h2>결과</h2>
 
-      <!-- RIGHT: Library -->
-      <section class="card">
-        <div class="cardHead">
-          <h2>저장소</h2>
-          <p class="muted">저장된 항목은 브라우저 로컬에 누적됩니다.</p>
-        </div>
+      <div id="ctxBar" class="ctxBar">
+        <span class="badge" id="bSido">-</span>
+        <span class="badge" id="bSigungu">-</span>
+        <span class="badge soft" id="bUse">용도:-</span>
+        <span class="badge soft" id="bTopic">토픽:-</span>
+        <button id="btnCopyQuery" class="btn ghost">검색어 복사</button>
+      </div>
 
-        <div class="row split">
-          <input id="inpFilter" class="input" placeholder="검색(이름/토픽/지자체)…" />
-          <button id="btnClearFilter" class="btn ghost">지우기</button>
-        </div>
+      <!-- 상위법 -->
+      <div class="panel">
+        <h3>상위법(전국 공통)</h3>
+        <div id="upperList" class="list"></div>
+      </div>
 
-        <div class="stats">
-          <div class="stat">
-            <div class="k">소스</div>
-            <div class="v" id="statSources">0</div>
-          </div>
-          <div class="stat">
-            <div class="k">토픽 태그</div>
-            <div class="v" id="statTags">0</div>
-          </div>
-        </div>
+      <!-- 자치법규 (상위법 아래로 이동) -->
+      <div class="panel">
+        <h3>자치법규(해당 지자체)</h3>
+        <div id="ordinList" class="list"></div>
+      </div>
 
-        <div id="libList" class="libList"></div>
+      <!-- 자동 후보 -->
+      <div class="panel">
+        <h3>자동찾기 후보</h3>
+        <div id="candidateBox" class="candidateBox"></div>
+      </div>
 
-        <div class="footerNote">
-          * 공유/팀 저장(사무소 공용)은 다음 단계에서 옵션으로 확장 가능.
-        </div>
-      </section>
-    </main>
+    </section>
 
-    <script type="module" src="./main.js"></script>
-  </body>
+  </div>
+
+</main>
+
+<script type="module" src="./main.js"></script>
+</body>
 </html>
