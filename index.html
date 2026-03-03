@@ -1,14 +1,220 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
-</head>
-<body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
-</body>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>archi-law-cl-03 | 건축 토픽엔진 (법제처)</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">A</div>
+        <div class="brandText">
+          <div class="name">archi-law-cl-03</div>
+          <div class="sub">지자체 + 용도 + 토픽 → 법제처 기반 링크/전체조문 수집(준비)</div>
+        </div>
+      </div>
+
+      <div class="topActions">
+        <button id="btnExport" class="btn ghost" title="현재 저장소를 JSON으로 내보내기">
+          내보내기(JSON)
+        </button>
+        <button id="btnImport" class="btn ghost" title="JSON을 가져와 저장소를 복원">
+          가져오기(JSON)
+        </button>
+        <button id="btnReset" class="btn danger" title="로컬 저장소 초기화">
+          초기화
+        </button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <!-- LEFT: Controls -->
+      <section class="card">
+        <div class="cardHead">
+          <h2>선택</h2>
+          <p class="muted">지자체(필수) + 용도(선택) + 토픽(필수)</p>
+        </div>
+
+        <div class="form">
+          <div class="row">
+            <label class="label">시도 <span class="req">필수</span></label>
+            <select id="selSido" class="select"></select>
+          </div>
+
+          <div class="row">
+            <label class="label">시군구 <span class="req">필수</span></label>
+            <input
+              id="inpSigungu"
+              class="input"
+              list="dlSigungu"
+              placeholder="예) 종로구, 성남시, 해운대구… (직접 입력 가능)"
+              autocomplete="off"
+            />
+            <datalist id="dlSigungu"></datalist>
+            <div class="hint">
+              * 시군구 데이터는 우선 “추천 목록 + 직접 입력” 방식. 필요하면 전체 목록으로 확장 가능.
+            </div>
+          </div>
+
+          <div class="row">
+            <label class="label">건축물 용도 (별표1) <span class="opt">선택</span></label>
+            <select id="selUse" class="select"></select>
+            <div class="hint">
+              * 용도는 토픽 검색 키워드/우선순위 보정에 사용 (없어도 동작).
+            </div>
+          </div>
+
+          <div class="row">
+            <label class="label">토픽 <span class="req">필수</span></label>
+            <select id="selTopic" class="select"></select>
+          </div>
+
+          <div class="row split">
+            <button id="btnBuild" class="btn primary">결과 생성</button>
+            <button id="btnAutoFind" class="btn">자치법규 자동찾기</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="row">
+            <label class="label">중복 처리 정책</label>
+            <div class="pillBox">
+              <span class="pill">소스(법령/조례)는 1회 저장</span>
+              <span class="pill">토픽은 태그로 다대다 연결</span>
+              <span class="pill">화면은 “묶기 + 배지”로 표시</span>
+            </div>
+          </div>
+
+          <div class="row">
+            <label class="label">법제처 검색 옵션</label>
+            <div class="toggleRow">
+              <input id="chkIncludeAct" type="checkbox" checked />
+              <label for="chkIncludeAct">상위법(법령) 포함</label>
+            </div>
+            <div class="toggleRow">
+              <input id="chkIncludeOrdin" type="checkbox" checked />
+              <label for="chkIncludeOrdin">자치법규(조례/규칙) 포함</label>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CENTER: Results -->
+      <section class="card">
+        <div class="cardHead">
+          <h2>결과</h2>
+          <p class="muted">
+            토픽별 링크는 “법제처 검색” 방식으로 안정적으로 연결합니다. (정확한 상세 URL 고정은 다음 단계에서 강화)
+          </p>
+        </div>
+
+        <div id="ctxBar" class="ctxBar">
+          <div class="ctxLeft">
+            <span class="badge" id="bSido">-</span>
+            <span class="badge" id="bSigungu">-</span>
+            <span class="badge soft" id="bUse">용도: (미선택)</span>
+            <span class="badge soft" id="bTopic">토픽: -</span>
+          </div>
+          <div class="ctxRight">
+            <button id="btnCopyQuery" class="btn ghost">검색어 복사</button>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div class="panel">
+            <div class="panelHead">
+              <h3>상위법(전국 공통)</h3>
+              <span class="tag">법제처</span>
+            </div>
+            <div id="upperList" class="list"></div>
+          </div>
+
+          <div class="panel">
+            <div class="panelHead">
+              <h3>자치법규(해당 지자체)</h3>
+              <span class="tag">법제처</span>
+            </div>
+            <div id="ordinList" class="list"></div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top: 14px">
+          <div class="panelHead">
+            <h3>자동찾기(검색 후보)</h3>
+            <span class="tag">키워드</span>
+          </div>
+          <div id="candidateBox" class="candidateBox"></div>
+        </div>
+      </section>
+
+      <!-- RIGHT: Library -->
+      <section class="card">
+        <div class="cardHead">
+          <h2>저장소</h2>
+          <p class="muted">
+            “소스 1회 저장 + 토픽 태그” 구조로 중복 없이 누적됩니다.
+          </p>
+        </div>
+
+        <div class="row split">
+          <input id="inpFilter" class="input" placeholder="검색(이름/토픽/지자체)…" />
+          <button id="btnClearFilter" class="btn ghost">지우기</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="k">소스</div>
+            <div class="v" id="statSources">0</div>
+          </div>
+          <div class="stat">
+            <div class="k">토픽 태그</div>
+            <div class="v" id="statTags">0</div>
+          </div>
+        </div>
+
+        <div id="libList" class="libList"></div>
+
+        <div class="footerNote">
+          * 저장은 브라우저 로컬(localStorage)에만 저장됩니다. (사무소 공유 저장은 다음 단계에서 옵션 추가)
+        </div>
+      </section>
+    </main>
+
+    <!-- Import modal -->
+    <dialog id="dlgImport" class="dlg">
+      <form method="dialog" class="dlgBody">
+        <div class="dlgHead">
+          <div class="dlgTitle">가져오기(JSON)</div>
+          <button class="btn ghost" value="cancel">닫기</button>
+        </div>
+        <textarea
+          id="taImport"
+          class="textarea"
+          placeholder='여기에 JSON 붙여넣기 (내보내기한 내용)'
+        ></textarea>
+        <div class="dlgActions">
+          <button id="btnDoImport" class="btn primary" value="ok">가져오기</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Export modal -->
+    <dialog id="dlgExport" class="dlg">
+      <form method="dialog" class="dlgBody">
+        <div class="dlgHead">
+          <div class="dlgTitle">내보내기(JSON)</div>
+          <button class="btn ghost" value="cancel">닫기</button>
+        </div>
+        <textarea id="taExport" class="textarea" readonly></textarea>
+        <div class="dlgActions">
+          <button id="btnCopyExport" class="btn">복사</button>
+          <button class="btn primary" value="ok">확인</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="./main.js"></script>
+  </body>
 </html>
