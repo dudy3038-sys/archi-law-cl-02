@@ -1,39 +1,18 @@
 // main.js (FULL REPLACE)
-// archi-law-cl-03 MVP (1~2단계)
-// - 지자체(필수) + 용도(선택) + 토픽(필수)
-// - 법제처(국가법령정보센터) "검색 링크" 기반
-// - 소스(법령/조례)는 1회 저장, 토픽은 태그로 다대다 연결
-// - 저장은 localStorage
-// ✅ 개선:
-// 1) 시군구: select 방식 지원(권장) + 기존 input(datalist) 호환
-// 2) 시도 변경 시 시군구 초기화(요청사항)
-// 3) 요소 존재 체크로 UI 변경에도 JS 오류 방지
+// archi-law-cl-03 (1~2단계 고도화)
+// - 자동찾기(후보 패널/버튼) 제거 ✅
+// - 자치법규만 고도화 ✅ (추천 TOP 표시)
+// - 법제처 검색 링크 기반 / 저장은 localStorage
 
 /* =========================
    데이터
 ========================= */
 
 const SIDO_LIST = [
-    "서울특별시",
-    "부산광역시",
-    "대구광역시",
-    "인천광역시",
-    "광주광역시",
-    "대전광역시",
-    "울산광역시",
-    "세종특별자치시",
-    "경기도",
-    "강원특별자치도",
-    "충청북도",
-    "충청남도",
-    "전북특별자치도",
-    "전라남도",
-    "경상북도",
-    "경상남도",
-    "제주특별자치도",
+    "서울특별시","부산광역시","대구광역시","인천광역시","광주광역시","대전광역시","울산광역시","세종특별자치시",
+    "경기도","강원특별자치도","충청북도","충청남도","전북특별자치도","전라남도","경상북도","경상남도","제주특별자치도",
   ];
   
-  // ✅ 시군구 전체 목록(요청 반영: 일부 시는 '구'까지 표기)
   const SIGUNGU_BY_SIDO = {
     서울특별시: [
       "강남구","강동구","강북구","강서구","관악구","광진구","구로구","금천구","노원구","도봉구",
@@ -90,7 +69,6 @@ const SIDO_LIST = [
     제주특별자치도: ["서귀포시","제주시"],
   };
   
-  // 용도(대분류)
   const USES = [
     { code: "", label: "(미선택)" },
     { code: "NEIGHBOR_1", label: "제1종 근린생활시설" },
@@ -119,84 +97,83 @@ const SIDO_LIST = [
     { code: "CAMPING", label: "야영장 시설" },
   ];
   
-  // 토픽
   const TOPICS = [
     {
       key: "SITE_PLAN",
       label: "대지·배치",
-      keywords: ["대지", "접도", "건축선", "대지안의공지", "공개공지", "이격"],
-      upperLaws: ["국토의 계획 및 이용에 관한 법률", "건축법", "건축법 시행령"],
-      ordinKeywords: ["건축", "개발행위", "지구단위", "대지", "건축위원회"],
+      keywords: ["대지","접도","건축선","대지안의공지","공개공지","이격"],
+      upperLaws: ["국토의 계획 및 이용에 관한 법률","건축법","건축법 시행령"],
+      ordinKeywords: ["건축","개발행위","지구단위","대지","건축위원회"],
     },
     {
       key: "MASS_HEIGHT",
       label: "규모·높이",
-      keywords: ["높이", "층수", "사선", "일조", "경관", "지구단위"],
-      upperLaws: ["건축법", "건축법 시행령", "국토의 계획 및 이용에 관한 법률"],
-      ordinKeywords: ["경관", "고도", "지구단위", "건축물", "일조"],
+      keywords: ["높이","층수","사선","일조","경관","지구단위"],
+      upperLaws: ["건축법","건축법 시행령","국토의 계획 및 이용에 관한 법률"],
+      ordinKeywords: ["경관","고도","지구단위","건축물","일조"],
     },
     {
       key: "STRUCTURE_SEISMIC",
       label: "구조·내진",
-      keywords: ["구조", "내진", "구조안전", "기초", "구조기준"],
-      upperLaws: ["건축법", "건축법 시행령"],
-      ordinKeywords: ["내진", "구조", "건축물", "안전"],
+      keywords: ["구조","내진","구조안전","기초","구조기준"],
+      upperLaws: ["건축법","건축법 시행령"],
+      ordinKeywords: ["내진","구조","건축물","안전"],
     },
     {
       key: "FIRE_COMPARTMENT",
       label: "방화·내화",
-      keywords: ["방화구획", "내화", "방화문", "방화셔터", "관통부"],
-      upperLaws: ["건축법", "건축법 시행령", "화재의 예방 및 안전관리에 관한 법률"],
-      ordinKeywords: ["방화", "내화", "소방", "안전"],
+      keywords: ["방화구획","내화","방화문","방화셔터","관통부"],
+      upperLaws: ["건축법","건축법 시행령","화재의 예방 및 안전관리에 관한 법률"],
+      ordinKeywords: ["방화","내화","소방","안전"],
     },
     {
       key: "EVAC_SAFETY",
       label: "피난·안전",
-      keywords: ["피난", "직통계단", "피난계단", "출구", "피난거리", "복도"],
-      upperLaws: ["건축법", "건축법 시행령", "화재의 예방 및 안전관리에 관한 법률"],
-      ordinKeywords: ["피난", "계단", "대피", "안전"],
+      keywords: ["피난","직통계단","피난계단","출구","피난거리","복도"],
+      upperLaws: ["건축법","건축법 시행령","화재의 예방 및 안전관리에 관한 법률"],
+      ordinKeywords: ["피난","계단","대피","안전"],
     },
     {
       key: "BF_ACCESS",
       label: "장애인·BF",
-      keywords: ["장애인", "편의시설", "무장애", "BF", "승강기"],
-      upperLaws: ["장애인·노인·임산부 등의 편의증진 보장에 관한 법률", "건축법 시행령"],
-      ordinKeywords: ["장애인", "편의", "무장애", "BF"],
+      keywords: ["장애인","편의시설","무장애","BF","승강기"],
+      upperLaws: ["장애인·노인·임산부 등의 편의증진 보장에 관한 법률","건축법 시행령"],
+      ordinKeywords: ["장애인","편의","무장애","BF"],
     },
     {
       key: "MEP_ELECT",
       label: "설비·전기",
-      keywords: ["기계실", "전기", "환기", "위생", "설비", "설비실"],
-      upperLaws: ["건축법", "건축법 시행령"],
-      ordinKeywords: ["설비", "위생", "환기"],
+      keywords: ["기계실","전기","환기","위생","설비","설비실"],
+      upperLaws: ["건축법","건축법 시행령"],
+      ordinKeywords: ["설비","위생","환기"],
     },
     {
       key: "ENERGY_GREEN",
       label: "에너지·친환경",
-      keywords: ["에너지절약", "단열", "열관류율", "ZEB", "신재생"],
-      upperLaws: ["녹색건축물 조성 지원법", "에너지이용 합리화법", "건축물의 에너지절약설계기준"],
-      ordinKeywords: ["에너지", "녹색", "친환경", "신재생"],
+      keywords: ["에너지절약","단열","열관류율","ZEB","신재생"],
+      upperLaws: ["녹색건축물 조성 지원법","에너지이용 합리화법","건축물의 에너지절약설계기준"],
+      ordinKeywords: ["에너지","녹색","친환경","신재생"],
     },
     {
       key: "PARKING",
       label: "주차",
-      keywords: ["부설주차장", "주차대수", "장애인주차", "기계식", "전기차충전"],
-      upperLaws: ["주차장법", "주차장법 시행령", "건축법 시행령"],
-      ordinKeywords: ["부설주차장", "주차", "주차장"],
+      keywords: ["부설주차장","주차대수","장애인주차","기계식","전기차충전"],
+      upperLaws: ["주차장법","주차장법 시행령","건축법 시행령"],
+      ordinKeywords: ["부설주차장","주차","주차장"],
     },
     {
       key: "FIRE_SERVICE",
       label: "소방",
-      keywords: ["소방시설", "스프링클러", "제연", "감지기", "비상방송"],
-      upperLaws: ["소방시설 설치 및 관리에 관한 법률", "화재의 예방 및 안전관리에 관한 법률"],
-      ordinKeywords: ["소방", "화재", "안전"],
+      keywords: ["소방시설","스프링클러","제연","감지기","비상방송"],
+      upperLaws: ["소방시설 설치 및 관리에 관한 법률","화재의 예방 및 안전관리에 관한 법률"],
+      ordinKeywords: ["소방","화재","안전"],
     },
     {
       key: "REVIEW_PERMIT",
       label: "심의·인허가",
-      keywords: ["건축위원회", "심의", "경관심의", "교통영향", "재해", "인허가"],
-      upperLaws: ["건축법", "건축법 시행령", "국토의 계획 및 이용에 관한 법률"],
-      ordinKeywords: ["심의", "위원회", "경관", "교통", "재해"],
+      keywords: ["건축위원회","심의","경관심의","교통영향","재해","인허가"],
+      upperLaws: ["건축법","건축법 시행령","국토의 계획 및 이용에 관한 법률"],
+      ordinKeywords: ["심의","위원회","경관","교통","재해"],
     },
   ];
   
@@ -262,7 +239,7 @@ const SIDO_LIST = [
   }
   
   /* =========================
-     법제처 링크(MVP: 검색)
+     법제처 링크 (검색)
   ========================= */
   
   function lawSearchUrl(query) {
@@ -342,13 +319,13 @@ const SIDO_LIST = [
   }
   
   /* =========================
-     시군구 입력/선택: select 우선, 없으면 input 호환
+     시군구: select 우선(현재 UI 기준)
   ========================= */
   
   function getSigunguValue() {
     const sel = $("selSigungu");
     if (sel) return clean(sel.value);
-    const inp = $("inpSigungu");
+    const inp = $("inpSigungu"); // 구버전 호환
     if (inp) return clean(inp.value);
     return "";
   }
@@ -362,8 +339,6 @@ const SIDO_LIST = [
   
   function setSigunguOptionsForSido(sido) {
     const list = (SIGUNGU_BY_SIDO[sido] ?? []).slice().sort((a, b) => a.localeCompare(b, "ko-KR"));
-  
-    // select 방식
     const sel = $("selSigungu");
     if (sel) {
       sel.innerHTML =
@@ -371,11 +346,9 @@ const SIDO_LIST = [
         list.map((x) => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
     }
   
-    // input + datalist 호환
+    // 구버전 datalist 호환
     const dl = $("dlSigungu");
-    if (dl) {
-      dl.innerHTML = list.map((x) => `<option value="${escapeHtml(x)}"></option>`).join("");
-    }
+    if (dl) dl.innerHTML = list.map((x) => `<option value="${escapeHtml(x)}"></option>`).join("");
   }
   
   /* =========================
@@ -385,7 +358,6 @@ const SIDO_LIST = [
   function getUseLabelByCode(code) {
     return USES.find((u) => u.code === code)?.label ?? "(미선택)";
   }
-  
   function getTopicByKey(key) {
     return TOPICS.find((t) => t.key === key) ?? null;
   }
@@ -400,11 +372,9 @@ const SIDO_LIST = [
         `<option value="">(시도 선택)</option>` +
         SIDO_LIST.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
     }
-  
     if (selUse) {
       selUse.innerHTML = USES.map((u) => `<option value="${escapeHtml(u.code)}">${escapeHtml(u.label)}</option>`).join("");
     }
-  
     if (selTopic) {
       selTopic.innerHTML =
         `<option value="">(토픽 선택)</option>` +
@@ -414,11 +384,7 @@ const SIDO_LIST = [
     if (selSido) {
       selSido.addEventListener("change", () => {
         const sido = clean(selSido.value);
-  
-        // ✅ 시도 변경 시 시군구 초기화
         resetSigunguUI();
-  
-        // ✅ 시도에 맞는 시군구 목록 세팅
         setSigunguOptionsForSido(sido);
       });
     }
@@ -486,43 +452,27 @@ const SIDO_LIST = [
     return el;
   }
   
-  function renderCandidates(ctx) {
-    const { sido, sigungu, useLabel, topic } = ctx;
-    const box = $("candidateBox");
-    if (!box) return;
-    box.innerHTML = "";
+  /* =========================
+     자치법규 추천(Top) 스코어링
+     - 아직 “확정”은 아니고, 실무적으로 가장 유력한 검색어를 상단에 고정
+  ========================= */
+  function scoreOrdinanceCandidate({ kw, useLabel, topic }) {
+    let score = 0;
   
-    const candidates = [];
+    // 토픽의 ordinKeywords에 포함된 키워드면 가산
+    if (topic?.ordinKeywords?.includes(kw)) score += 30;
   
-    for (const kw of uniq(topic.keywords)) {
-      candidates.push({ kind: "조례", query: buildOrdinanceQuery({ sido, sigungu, kw, useLabel: "" }) });
-    }
-    if (useLabel !== "(미선택)") {
-      for (const kw of uniq(topic.keywords).slice(0, 4)) {
-        candidates.push({ kind: "조례+용도", query: buildOrdinanceQuery({ sido, sigungu, kw, useLabel }) });
-      }
-    }
-    for (const lawName of uniq(topic.upperLaws).slice(0, 3)) {
-      candidates.push({ kind: "상위법", query: buildUpperLawQuery(lawName, topic.label) });
-    }
+    // 토픽 label과 가까운 키워드면 가산 (간단히 포함 검사)
+    if (topic?.label && kw && topic.label.includes(kw)) score += 10;
   
-    candidates.slice(0, 12).forEach((c) => {
-      const url = lawSearchUrl(c.query);
-      const el = document.createElement("div");
-      el.className = "cand";
-      el.innerHTML = `
-        <div class="q"><b>${escapeHtml(c.kind)}</b> · ${escapeHtml(c.query)}</div>
-        <div class="actions">
-          <button class="btn" data-act="open">열기</button>
-          <button class="btn ghost" data-act="copy">복사</button>
-        </div>
-      `;
-      el.querySelector('[data-act="open"]').addEventListener("click", () => {
-        window.open(url, "_blank", "noopener,noreferrer");
-      });
-      el.querySelector('[data-act="copy"]').addEventListener("click", () => copyToClipboard(c.query));
-      box.appendChild(el);
-    });
+    // 용도 선택 시, 용도 포함 쿼리는 실무적으로 유리한 경우가 많아 가산
+    if (useLabel && useLabel !== "(미선택)") score += 8;
+  
+    // 짧고 일반적인 키워드(건축/대지/안전 등)는 너무 넓게 걸려서 약간 감점
+    const tooBroad = ["건축", "안전", "대지", "건축물"];
+    if (tooBroad.includes(kw)) score -= 6;
+  
+    return score;
   }
   
   function renderResultLists(ctx) {
@@ -580,12 +530,72 @@ const SIDO_LIST = [
       }
     }
   
-    // 자치법규
+    // 자치법규 (추천 TOP 상단 고정)
     if (ordinList) {
       if (!includeOrdin) {
         ordinList.innerHTML = `<div class="hint">자치법규 표시가 꺼져있습니다.</div>`;
       } else {
-        uniq(topic.ordinKeywords).forEach((kw) => {
+        const kws = uniq(topic.ordinKeywords);
+  
+        // 후보 생성 + 스코어링
+        const candidates = kws.map((kw) => ({
+          kw,
+          score: scoreOrdinanceCandidate({ kw, useLabel, topic }),
+        }))
+        .sort((a, b) => b.score - a.score);
+  
+        const top = candidates.slice(0, 2);
+        const rest = candidates.slice(2);
+  
+        // ✅ TOP 먼저
+        top.forEach(({ kw, score }, idx) => {
+          const q = buildOrdinanceQuery({ sido, sigungu, kw, useLabel: useLabel !== "(미선택)" ? useLabel : "" });
+          const url = lawSearchUrl(q);
+          const name = `${kw} 관련 조례/규칙(검색)`;
+          const jurisdiction = `${sido} ${sigungu}`;
+          const id = makeSourceId({ type: "자치법규", name, jurisdiction });
+          const dup = seen.has(id);
+          if (!dup) seen.add(id);
+  
+          ordinList.appendChild(
+            renderItem({
+              title: name,
+              subtitle: q,
+              meta: [
+                { text: "추천 TOP", cls: "warn" },
+                { text: "자치법규", cls: "good" },
+                { text: `지자체:${sigungu}` },
+                { text: `키워드:${kw}` },
+                { text: `점수:${score}` },
+                dup ? { text: "중복(묶임)", cls: "warn" } : null,
+              ],
+              actions: [
+                { label: "열기", onClick: () => window.open(url, "_blank", "noopener,noreferrer") },
+                { label: "복사", onClick: () => copyToClipboard(url) },
+                {
+                  label: "저장",
+                  onClick: () => {
+                    upsertSource({ type: "자치법규", name, jurisdiction, query: q, url, topicLabel: topic.label, useLabel });
+                    toast("저장됨");
+                    renderLibrary();
+                  },
+                },
+              ],
+            })
+          );
+        });
+  
+        // 구분선(시각적으로만)
+        if (rest.length > 0) {
+          const sep = document.createElement("div");
+          sep.className = "hint";
+          sep.style.margin = "6px 2px 2px";
+          sep.textContent = "나머지 후보";
+          ordinList.appendChild(sep);
+        }
+  
+        // ✅ 나머지
+        rest.forEach(({ kw, score }) => {
           const q = buildOrdinanceQuery({ sido, sigungu, kw, useLabel: useLabel !== "(미선택)" ? useLabel : "" });
           const url = lawSearchUrl(q);
           const name = `${kw} 관련 조례/규칙(검색)`;
@@ -602,6 +612,7 @@ const SIDO_LIST = [
                 { text: "자치법규", cls: "good" },
                 { text: `지자체:${sigungu}` },
                 { text: `키워드:${kw}` },
+                { text: `점수:${score}` },
                 dup ? { text: "중복(묶임)", cls: "warn" } : null,
               ],
               actions: [
@@ -621,8 +632,6 @@ const SIDO_LIST = [
         });
       }
     }
-  
-    renderCandidates(ctx);
   }
   
   /* =========================
@@ -703,18 +712,11 @@ const SIDO_LIST = [
       renderResultLists(v.ctx);
     });
   
-    on($("btnAutoFind"), "click", () => {
-      const v = validateInputs();
-      if (!v.ok) return toast(v.msg);
-      renderCandidates(v.ctx);
-      toast("후보 생성 완료");
-    });
-  
     on($("btnCopyQuery"), "click", async () => {
       const v = validateInputs();
       if (!v.ok) return toast("먼저 시도/시군구/토픽을 선택해줘.");
       const { sido, sigungu, useLabel, topic } = v.ctx;
-      const kw = topic.keywords?.[0] ?? topic.label;
+      const kw = topic.ordinKeywords?.[0] ?? topic.keywords?.[0] ?? topic.label;
       const q = buildOrdinanceQuery({ sido, sigungu, kw, useLabel: useLabel !== "(미선택)" ? useLabel : "" });
       await copyToClipboard(q);
     });

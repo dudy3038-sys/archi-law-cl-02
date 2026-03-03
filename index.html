@@ -28,7 +28,6 @@
       <h2>선택</h2>
 
       <div class="row3">
-
         <div class="field">
           <div class="fieldLabel">시도 *</div>
           <select id="selSido" class="select"></select>
@@ -36,7 +35,6 @@
 
         <div class="field">
           <div class="fieldLabel">시군구 *</div>
-          <!-- ✅ select 방식으로 변경 -->
           <select id="selSigungu" class="select">
             <option value="">(시군구 선택)</option>
           </select>
@@ -46,7 +44,6 @@
           <div class="fieldLabel">건축물 용도</div>
           <select id="selUse" class="select"></select>
         </div>
-
       </div>
 
       <div class="row">
@@ -58,7 +55,7 @@
 
       <div class="row split">
         <button id="btnBuild" class="btn primary">결과 생성</button>
-        <button id="btnAutoFind" class="btn">자동찾기</button>
+        <!-- ✅ 자동찾기 버튼 제거 -->
       </div>
 
       <div class="row toggles">
@@ -67,7 +64,7 @@
       </div>
     </section>
 
-    <!-- 저장소 (선택창 아래로 이동) -->
+    <!-- 저장소 -->
     <section class="card">
       <h2>저장소</h2>
 
@@ -92,11 +89,10 @@
 
   </div>
 
-  <!-- 🔴 RIGHT COLUMN (결과 크게) -->
+  <!-- 🔴 RIGHT COLUMN -->
   <div class="rightColumn">
 
     <section class="card bigResult">
-
       <h2>결과</h2>
 
       <div id="ctxBar" class="ctxBar">
@@ -107,24 +103,17 @@
         <button id="btnCopyQuery" class="btn ghost">검색어 복사</button>
       </div>
 
-      <!-- 상위법 -->
       <div class="panel">
         <h3>상위법(전국 공통)</h3>
         <div id="upperList" class="list"></div>
       </div>
 
-      <!-- 자치법규 (상위법 아래로 이동) -->
       <div class="panel">
         <h3>자치법규(해당 지자체)</h3>
         <div id="ordinList" class="list"></div>
       </div>
 
-      <!-- 자동 후보 -->
-      <div class="panel">
-        <h3>자동찾기 후보</h3>
-        <div id="candidateBox" class="candidateBox"></div>
-      </div>
-
+      <!-- ✅ 자동찾기 후보 패널 제거 -->
     </section>
 
   </div>
