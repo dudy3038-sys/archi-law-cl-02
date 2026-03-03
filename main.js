@@ -5,15 +5,14 @@
 // - 소스(법령/조례)는 1회 저장, 토픽은 태그로 다대다 연결
 // - 저장은 localStorage
 // ✅ 개선:
-// 1) 시군구 전체 목록(가나다순 표시; 일부 시는 '구'까지 표기)
-// 2) 시도 변경 시 시군구 입력값 초기화
-// 3) (다음 단계에서 UI 요소 삭제해도) 요소 존재 체크로 JS 오류 방지
+// 1) 시군구: select 방식 지원(권장) + 기존 input(datalist) 호환
+// 2) 시도 변경 시 시군구 초기화(요청사항)
+// 3) 요소 존재 체크로 UI 변경에도 JS 오류 방지
 
 /* =========================
    데이터
 ========================= */
 
-// 17개 시도
 const SIDO_LIST = [
     "서울특별시",
     "부산광역시",
@@ -34,12 +33,7 @@ const SIDO_LIST = [
     "제주특별자치도",
   ];
   
-  // ✅ 시군구 전체 목록(표기 원칙)
-  // - 광역시/특별시: 구/군 전부
-  // - 도: 시/군 전부
-  // - 아래 항목은 요청대로 '구'까지 표기:
-  //   경기도(수원/성남/고양/용인/안산/안양), 충북(청주), 충남(천안), 전북(전주),
-  //   경북(포항), 경남(창원)
+  // ✅ 시군구 전체 목록(요청 반영: 일부 시는 '구'까지 표기)
   const SIGUNGU_BY_SIDO = {
     서울특별시: [
       "강남구","강동구","강북구","강서구","관악구","광진구","구로구","금천구","노원구","도봉구",
@@ -50,24 +44,12 @@ const SIDO_LIST = [
       "강서구","금정구","기장군","남구","동구","동래구","부산진구","북구","사상구","사하구",
       "서구","수영구","연제구","영도구","중구","해운대구",
     ],
-    대구광역시: [
-      "군위군","남구","달서구","달성군","동구","북구","서구","수성구","중구",
-    ],
-    인천광역시: [
-      "강화군","계양구","남동구","동구","미추홀구","부평구","서구","연수구","옹진군","중구",
-    ],
-    광주광역시: [
-      "광산구","남구","동구","북구","서구",
-    ],
-    대전광역시: [
-      "대덕구","동구","서구","유성구","중구",
-    ],
-    울산광역시: [
-      "남구","동구","북구","중구","울주군",
-    ],
-    세종특별자치시: [
-      "세종특별자치시",
-    ],
+    대구광역시: ["군위군","남구","달서구","달성군","동구","북구","서구","수성구","중구"],
+    인천광역시: ["강화군","계양구","남동구","동구","미추홀구","부평구","서구","연수구","옹진군","중구"],
+    광주광역시: ["광산구","남구","동구","북구","서구"],
+    대전광역시: ["대덕구","동구","서구","유성구","중구"],
+    울산광역시: ["남구","동구","북구","중구","울주군"],
+    세종특별자치시: ["세종특별자치시"],
     경기도: [
       "가평군","고양시 덕양구","고양시 일산동구","고양시 일산서구","과천시","광명시","광주시","구리시","군포시","김포시",
       "남양주시","동두천시","부천시","성남시 분당구","성남시 수정구","성남시 중원구","수원시 권선구","수원시 영통구","수원시 장안구","수원시 팔달구",
@@ -105,12 +87,10 @@ const SIDO_LIST = [
       "진주시","창녕군","창원시 마산합포구","창원시 마산회원구","창원시 성산구","창원시 의창구","창원시 진해구",
       "통영시","하동군","함안군","함양군","합천군",
     ],
-    제주특별자치도: [
-      "서귀포시","제주시",
-    ],
+    제주특별자치도: ["서귀포시","제주시"],
   };
   
-  // MVP 용도(대분류) — 선택값은 “검색 보정”에만 사용
+  // 용도(대분류)
   const USES = [
     { code: "", label: "(미선택)" },
     { code: "NEIGHBOR_1", label: "제1종 근린생활시설" },
@@ -139,7 +119,7 @@ const SIDO_LIST = [
     { code: "CAMPING", label: "야영장 시설" },
   ];
   
-  // 공통 코어 토픽
+  // 토픽
   const TOPICS = [
     {
       key: "SITE_PLAN",
@@ -226,17 +206,18 @@ const SIDO_LIST = [
   
   const LS_KEY = "archiLawCl03.library.v1";
   
-  function $(id) {
-    return document.getElementById(id);
-  }
-  function clean(s) {
-    return String(s ?? "").trim();
-  }
-  function uniq(arr) {
-    return [...new Set((arr ?? []).filter(Boolean))];
-  }
-  function nowIso() {
-    return new Date().toISOString();
+  function $(id) { return document.getElementById(id); }
+  function clean(s) { return String(s ?? "").trim(); }
+  function uniq(arr) { return [...new Set((arr ?? []).filter(Boolean))]; }
+  function nowIso() { return new Date().toISOString(); }
+  
+  function escapeHtml(str) {
+    return String(str ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
   }
   
   async function copyToClipboard(text) {
@@ -281,7 +262,7 @@ const SIDO_LIST = [
   }
   
   /* =========================
-     법제처 링크 생성 (MVP: 검색 링크)
+     법제처 링크(MVP: 검색)
   ========================= */
   
   function lawSearchUrl(query) {
@@ -304,7 +285,7 @@ const SIDO_LIST = [
   }
   
   /* =========================
-     저장소 모델
+     저장소
   ========================= */
   
   function loadLibrary() {
@@ -361,14 +342,52 @@ const SIDO_LIST = [
   }
   
   /* =========================
+     시군구 입력/선택: select 우선, 없으면 input 호환
+  ========================= */
+  
+  function getSigunguValue() {
+    const sel = $("selSigungu");
+    if (sel) return clean(sel.value);
+    const inp = $("inpSigungu");
+    if (inp) return clean(inp.value);
+    return "";
+  }
+  
+  function resetSigunguUI() {
+    const sel = $("selSigungu");
+    if (sel) sel.value = "";
+    const inp = $("inpSigungu");
+    if (inp) inp.value = "";
+  }
+  
+  function setSigunguOptionsForSido(sido) {
+    const list = (SIGUNGU_BY_SIDO[sido] ?? []).slice().sort((a, b) => a.localeCompare(b, "ko-KR"));
+  
+    // select 방식
+    const sel = $("selSigungu");
+    if (sel) {
+      sel.innerHTML =
+        `<option value="">(시군구 선택)</option>` +
+        list.map((x) => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
+    }
+  
+    // input + datalist 호환
+    const dl = $("dlSigungu");
+    if (dl) {
+      dl.innerHTML = list.map((x) => `<option value="${escapeHtml(x)}"></option>`).join("");
+    }
+  }
+  
+  /* =========================
      UI 초기화
   ========================= */
   
-  function fillSelect(el, options, placeholder = "(선택)") {
-    if (!el) return;
-    el.innerHTML =
-      `<option value="">${placeholder}</option>` +
-      options.map((o) => `<option value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</option>`).join("");
+  function getUseLabelByCode(code) {
+    return USES.find((u) => u.code === code)?.label ?? "(미선택)";
+  }
+  
+  function getTopicByKey(key) {
+    return TOPICS.find((t) => t.key === key) ?? null;
   }
   
   function initSelects() {
@@ -376,56 +395,45 @@ const SIDO_LIST = [
     const selUse = $("selUse");
     const selTopic = $("selTopic");
   
-    // 시도
     if (selSido) {
       selSido.innerHTML =
-        `<option value="">(선택)</option>` +
+        `<option value="">(시도 선택)</option>` +
         SIDO_LIST.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
     }
   
-    // 용도
     if (selUse) {
       selUse.innerHTML = USES.map((u) => `<option value="${escapeHtml(u.code)}">${escapeHtml(u.label)}</option>`).join("");
     }
   
-    // 토픽
     if (selTopic) {
       selTopic.innerHTML =
-        `<option value="">(선택)</option>` +
+        `<option value="">(토픽 선택)</option>` +
         TOPICS.map((t) => `<option value="${escapeHtml(t.key)}">${escapeHtml(t.label)}</option>`).join("");
     }
   
-    // 시도 변경 시: datalist 갱신 + 시군구 입력 초기화(요청사항)
     if (selSido) {
       selSido.addEventListener("change", () => {
         const sido = clean(selSido.value);
-        const inp = $("inpSigungu");
-        if (inp) inp.value = ""; // ✅ 기본창으로 돌아가기
   
-        const dl = $("dlSigungu");
-        const list = (SIGUNGU_BY_SIDO[sido] ?? []).slice().sort((a, b) => a.localeCompare(b, "ko-KR"));
-        if (dl) dl.innerHTML = list.map((x) => `<option value="${escapeHtml(x)}"></option>`).join("");
+        // ✅ 시도 변경 시 시군구 초기화
+        resetSigunguUI();
+  
+        // ✅ 시도에 맞는 시군구 목록 세팅
+        setSigunguOptionsForSido(sido);
       });
     }
   }
   
-  function getUseLabelByCode(code) {
-    return USES.find((u) => u.code === code)?.label ?? "(미선택)";
-  }
-  function getTopicByKey(key) {
-    return TOPICS.find((t) => t.key === key) ?? null;
-  }
-  
   function validateInputs() {
     const sido = clean($("selSido")?.value);
-    const sigungu = clean($("inpSigungu")?.value);
+    const sigungu = getSigunguValue();
     const useCode = $("selUse")?.value ?? "";
     const useLabel = getUseLabelByCode(useCode);
     const topicKey = $("selTopic")?.value ?? "";
     const topic = getTopicByKey(topicKey);
   
     if (!sido) return { ok: false, msg: "시도를 선택해줘." };
-    if (!sigungu) return { ok: false, msg: "시군구를 선택/입력해줘." };
+    if (!sigungu) return { ok: false, msg: "시군구를 선택해줘." };
     if (!topic) return { ok: false, msg: "토픽을 선택해줘." };
   
     return { ok: true, ctx: { sido, sigungu, useLabel, topic } };
@@ -445,182 +453,6 @@ const SIDO_LIST = [
   /* =========================
      렌더링
   ========================= */
-  
-  function renderResultLists(ctx) {
-    const { sido, sigungu, useLabel, topic } = ctx;
-    setCtxBar({ sido, sigungu, useLabel, topicLabel: topic.label });
-  
-    const includeAct = $("chkIncludeAct")?.checked ?? true;
-    const includeOrdin = $("chkIncludeOrdin")?.checked ?? true;
-  
-    const upperList = $("upperList");
-    const ordinList = $("ordinList");
-    const candidateBox = $("candidateBox");
-  
-    if (upperList) upperList.innerHTML = "";
-    if (ordinList) ordinList.innerHTML = "";
-    if (candidateBox) candidateBox.innerHTML = "";
-  
-    // 이번 화면 내 중복 묶기(소스 중복키)
-    const seen = new Set();
-  
-    // 상위법
-    if (upperList) {
-      if (!includeAct) {
-        upperList.innerHTML = `<div class="hint">상위법 표시가 꺼져있습니다.</div>`;
-      } else {
-        topic.upperLaws.forEach((lawName) => {
-          const q = buildUpperLawQuery(lawName, topic.label);
-          const url = lawSearchUrl(q);
-          const id = makeSourceId({ type: "상위법", name: lawName, jurisdiction: "-" });
-          const dup = seen.has(id);
-          if (!dup) seen.add(id);
-  
-          upperList.appendChild(
-            renderItem({
-              title: lawName,
-              subtitle: q,
-              meta: [
-                { text: "상위법", cls: "good" },
-                { text: `토픽:${topic.label}` },
-                useLabel !== "(미선택)" ? { text: `용도:${useLabel}` } : null,
-                dup ? { text: "중복(묶임)", cls: "warn" } : null,
-              ],
-              actions: [
-                { label: "열기", onClick: () => window.open(url, "_blank", "noopener,noreferrer") },
-                { label: "복사", onClick: () => copyToClipboard(url) },
-                {
-                  label: "저장",
-                  onClick: () => {
-                    upsertSource({
-                      type: "상위법",
-                      name: lawName,
-                      jurisdiction: "-",
-                      query: q,
-                      url,
-                      topicLabel: topic.label,
-                      useLabel,
-                    });
-                    toast("저장됨");
-                    renderLibrary();
-                  },
-                },
-              ],
-            })
-          );
-        });
-      }
-    }
-  
-    // 자치법규
-    if (ordinList) {
-      if (!includeOrdin) {
-        ordinList.innerHTML = `<div class="hint">자치법규 표시가 꺼져있습니다.</div>`;
-      } else {
-        const kws = uniq(topic.ordinKeywords);
-        kws.forEach((kw) => {
-          const q = buildOrdinanceQuery({
-            sido,
-            sigungu,
-            kw,
-            useLabel: useLabel !== "(미선택)" ? useLabel : "",
-          });
-          const url = lawSearchUrl(q);
-          const name = `${kw} 관련 조례/규칙(검색)`;
-          const jurisdiction = `${sido} ${sigungu}`;
-          const id = makeSourceId({ type: "자치법규", name, jurisdiction });
-          const dup = seen.has(id);
-          if (!dup) seen.add(id);
-  
-          ordinList.appendChild(
-            renderItem({
-              title: name,
-              subtitle: q,
-              meta: [
-                { text: "자치법규", cls: "good" },
-                { text: `지자체:${sigungu}` },
-                { text: `키워드:${kw}` },
-                dup ? { text: "중복(묶임)", cls: "warn" } : null,
-              ],
-              actions: [
-                { label: "열기", onClick: () => window.open(url, "_blank", "noopener,noreferrer") },
-                { label: "복사", onClick: () => copyToClipboard(url) },
-                {
-                  label: "저장",
-                  onClick: () => {
-                    upsertSource({
-                      type: "자치법규",
-                      name,
-                      jurisdiction,
-                      query: q,
-                      url,
-                      topicLabel: topic.label,
-                      useLabel,
-                    });
-                    toast("저장됨");
-                    renderLibrary();
-                  },
-                },
-              ],
-            })
-          );
-        });
-      }
-    }
-  
-    // 후보(자동찾기)
-    renderCandidates(ctx);
-  }
-  
-  function renderCandidates(ctx) {
-    const { sido, sigungu, useLabel, topic } = ctx;
-    const box = $("candidateBox");
-    if (!box) return;
-    box.innerHTML = "";
-  
-    const candidates = [];
-  
-    for (const kw of uniq(topic.keywords)) {
-      candidates.push({
-        kind: "조례",
-        query: buildOrdinanceQuery({ sido, sigungu, kw, useLabel: "" }),
-      });
-    }
-  
-    if (useLabel !== "(미선택)") {
-      for (const kw of uniq(topic.keywords).slice(0, 4)) {
-        candidates.push({
-          kind: "조례+용도",
-          query: buildOrdinanceQuery({ sido, sigungu, kw, useLabel }),
-        });
-      }
-    }
-  
-    for (const lawName of uniq(topic.upperLaws).slice(0, 3)) {
-      candidates.push({
-        kind: "상위법",
-        query: buildUpperLawQuery(lawName, topic.label),
-      });
-    }
-  
-    candidates.slice(0, 12).forEach((c) => {
-      const url = lawSearchUrl(c.query);
-      const el = document.createElement("div");
-      el.className = "cand";
-      el.innerHTML = `
-        <div class="q"><b>${escapeHtml(c.kind)}</b> · ${escapeHtml(c.query)}</div>
-        <div class="actions">
-          <button class="btn" data-act="open">열기</button>
-          <button class="btn ghost" data-act="copy">복사</button>
-        </div>
-      `;
-      el.querySelector('[data-act="open"]').addEventListener("click", () => {
-        window.open(url, "_blank", "noopener,noreferrer");
-      });
-      el.querySelector('[data-act="copy"]').addEventListener("click", () => copyToClipboard(c.query));
-      box.appendChild(el);
-    });
-  }
   
   function renderItem({ title, subtitle, meta = [], actions = [] }) {
     const el = document.createElement("div");
@@ -654,13 +486,143 @@ const SIDO_LIST = [
     return el;
   }
   
-  function escapeHtml(str) {
-    return String(str ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+  function renderCandidates(ctx) {
+    const { sido, sigungu, useLabel, topic } = ctx;
+    const box = $("candidateBox");
+    if (!box) return;
+    box.innerHTML = "";
+  
+    const candidates = [];
+  
+    for (const kw of uniq(topic.keywords)) {
+      candidates.push({ kind: "조례", query: buildOrdinanceQuery({ sido, sigungu, kw, useLabel: "" }) });
+    }
+    if (useLabel !== "(미선택)") {
+      for (const kw of uniq(topic.keywords).slice(0, 4)) {
+        candidates.push({ kind: "조례+용도", query: buildOrdinanceQuery({ sido, sigungu, kw, useLabel }) });
+      }
+    }
+    for (const lawName of uniq(topic.upperLaws).slice(0, 3)) {
+      candidates.push({ kind: "상위법", query: buildUpperLawQuery(lawName, topic.label) });
+    }
+  
+    candidates.slice(0, 12).forEach((c) => {
+      const url = lawSearchUrl(c.query);
+      const el = document.createElement("div");
+      el.className = "cand";
+      el.innerHTML = `
+        <div class="q"><b>${escapeHtml(c.kind)}</b> · ${escapeHtml(c.query)}</div>
+        <div class="actions">
+          <button class="btn" data-act="open">열기</button>
+          <button class="btn ghost" data-act="copy">복사</button>
+        </div>
+      `;
+      el.querySelector('[data-act="open"]').addEventListener("click", () => {
+        window.open(url, "_blank", "noopener,noreferrer");
+      });
+      el.querySelector('[data-act="copy"]').addEventListener("click", () => copyToClipboard(c.query));
+      box.appendChild(el);
+    });
+  }
+  
+  function renderResultLists(ctx) {
+    const { sido, sigungu, useLabel, topic } = ctx;
+    setCtxBar({ sido, sigungu, useLabel, topicLabel: topic.label });
+  
+    const includeAct = $("chkIncludeAct")?.checked ?? true;
+    const includeOrdin = $("chkIncludeOrdin")?.checked ?? true;
+  
+    const upperList = $("upperList");
+    const ordinList = $("ordinList");
+  
+    if (upperList) upperList.innerHTML = "";
+    if (ordinList) ordinList.innerHTML = "";
+  
+    const seen = new Set();
+  
+    // 상위법
+    if (upperList) {
+      if (!includeAct) {
+        upperList.innerHTML = `<div class="hint">상위법 표시가 꺼져있습니다.</div>`;
+      } else {
+        topic.upperLaws.forEach((lawName) => {
+          const q = buildUpperLawQuery(lawName, topic.label);
+          const url = lawSearchUrl(q);
+          const id = makeSourceId({ type: "상위법", name: lawName, jurisdiction: "-" });
+          const dup = seen.has(id);
+          if (!dup) seen.add(id);
+  
+          upperList.appendChild(
+            renderItem({
+              title: lawName,
+              subtitle: q,
+              meta: [
+                { text: "상위법", cls: "good" },
+                { text: `토픽:${topic.label}` },
+                useLabel !== "(미선택)" ? { text: `용도:${useLabel}` } : null,
+                dup ? { text: "중복(묶임)", cls: "warn" } : null,
+              ],
+              actions: [
+                { label: "열기", onClick: () => window.open(url, "_blank", "noopener,noreferrer") },
+                { label: "복사", onClick: () => copyToClipboard(url) },
+                {
+                  label: "저장",
+                  onClick: () => {
+                    upsertSource({ type: "상위법", name: lawName, jurisdiction: "-", query: q, url, topicLabel: topic.label, useLabel });
+                    toast("저장됨");
+                    renderLibrary();
+                  },
+                },
+              ],
+            })
+          );
+        });
+      }
+    }
+  
+    // 자치법규
+    if (ordinList) {
+      if (!includeOrdin) {
+        ordinList.innerHTML = `<div class="hint">자치법규 표시가 꺼져있습니다.</div>`;
+      } else {
+        uniq(topic.ordinKeywords).forEach((kw) => {
+          const q = buildOrdinanceQuery({ sido, sigungu, kw, useLabel: useLabel !== "(미선택)" ? useLabel : "" });
+          const url = lawSearchUrl(q);
+          const name = `${kw} 관련 조례/규칙(검색)`;
+          const jurisdiction = `${sido} ${sigungu}`;
+          const id = makeSourceId({ type: "자치법규", name, jurisdiction });
+          const dup = seen.has(id);
+          if (!dup) seen.add(id);
+  
+          ordinList.appendChild(
+            renderItem({
+              title: name,
+              subtitle: q,
+              meta: [
+                { text: "자치법규", cls: "good" },
+                { text: `지자체:${sigungu}` },
+                { text: `키워드:${kw}` },
+                dup ? { text: "중복(묶임)", cls: "warn" } : null,
+              ],
+              actions: [
+                { label: "열기", onClick: () => window.open(url, "_blank", "noopener,noreferrer") },
+                { label: "복사", onClick: () => copyToClipboard(url) },
+                {
+                  label: "저장",
+                  onClick: () => {
+                    upsertSource({ type: "자치법규", name, jurisdiction, query: q, url, topicLabel: topic.label, useLabel });
+                    toast("저장됨");
+                    renderLibrary();
+                  },
+                },
+              ],
+            })
+          );
+        });
+      }
+    }
+  
+    renderCandidates(ctx);
   }
   
   /* =========================
@@ -676,15 +638,12 @@ const SIDO_LIST = [
     const filtered = !filter
       ? sources
       : sources.filter((s) => {
-          const hay = [s.type, s.name, s.jurisdiction, ...(s.topics ?? []), ...(s.uses ?? []), s.query]
-            .join(" ")
-            .toLowerCase();
+          const hay = [s.type, s.name, s.jurisdiction, ...(s.topics ?? []), ...(s.uses ?? []), s.query].join(" ").toLowerCase();
           return hay.includes(filter);
         });
   
     if ($("statSources")) $("statSources").textContent = String(sources.length);
-    if ($("statTags"))
-      $("statTags").textContent = String(sources.reduce((acc, s) => acc + (s.topics?.length ?? 0), 0));
+    if ($("statTags")) $("statTags").textContent = String(sources.reduce((acc, s) => acc + (s.topics?.length ?? 0), 0));
   
     if (!listEl) return;
     listEl.innerHTML = "";
@@ -711,14 +670,10 @@ const SIDO_LIST = [
               <button class="btn danger" data-act="del">삭제</button>
             </div>
           </div>
-          <div class="hint" style="margin-top:10px; word-break:break-word;">
-            ${escapeHtml(s.query || "")}
-          </div>
+          <div class="hint" style="margin-top:10px; word-break:break-word;">${escapeHtml(s.query || "")}</div>
         `;
   
-        el.querySelector('[data-act="open"]').addEventListener("click", () => {
-          window.open(s.url, "_blank", "noopener,noreferrer");
-        });
+        el.querySelector('[data-act="open"]').addEventListener("click", () => window.open(s.url, "_blank", "noopener,noreferrer"));
         el.querySelector('[data-act="copy"]').addEventListener("click", () => copyToClipboard(s.url));
         el.querySelector('[data-act="del"]').addEventListener("click", () => {
           if (!confirm("정말 삭제할까?")) return;
@@ -736,12 +691,10 @@ const SIDO_LIST = [
   }
   
   /* =========================
-     이벤트 바인딩 (요소 존재 체크)
+     이벤트
   ========================= */
   
-  function on(el, ev, fn) {
-    if (el) el.addEventListener(ev, fn);
-  }
+  function on(el, ev, fn) { if (el) el.addEventListener(ev, fn); }
   
   function bindEvents() {
     on($("btnBuild"), "click", () => {
@@ -754,21 +707,15 @@ const SIDO_LIST = [
       const v = validateInputs();
       if (!v.ok) return toast(v.msg);
       renderCandidates(v.ctx);
-      toast("후보를 생성했어. 각 후보의 ‘열기’로 법제처 검색을 진행해줘.");
+      toast("후보 생성 완료");
     });
   
     on($("btnCopyQuery"), "click", async () => {
       const v = validateInputs();
       if (!v.ok) return toast("먼저 시도/시군구/토픽을 선택해줘.");
       const { sido, sigungu, useLabel, topic } = v.ctx;
-  
       const kw = topic.keywords?.[0] ?? topic.label;
-      const q = buildOrdinanceQuery({
-        sido,
-        sigungu,
-        kw,
-        useLabel: useLabel !== "(미선택)" ? useLabel : "",
-      });
+      const q = buildOrdinanceQuery({ sido, sigungu, kw, useLabel: useLabel !== "(미선택)" ? useLabel : "" });
       await copyToClipboard(q);
     });
   
@@ -779,7 +726,6 @@ const SIDO_LIST = [
       renderLibrary();
     });
   
-    // ✅ 초기화 버튼만 유지(내보내기/가져오기 버튼은 다음 단계에서 HTML에서 삭제할 예정)
     on($("btnReset"), "click", () => {
       if (!confirm("로컬 저장소를 초기화할까? (저장된 소스가 모두 삭제됨)")) return;
       localStorage.removeItem(LS_KEY);
