@@ -1,13 +1,16 @@
 /* style.css (FULL REPLACE)
    archi-law-cl-03 dark UI
-   목표:
-   1) 결과 생성 버튼 = 토픽 select 폭만큼(=100%) ✅
-   2) 전체화면에서 "결과창만" 세로 스크롤 ✅ (페이지 전체 스크롤 금지)
-   3) 완전 다크(검정 계열) ✅
+   요청 반영(요청한 것만):
+   1) 모든 select 드롭다운(시도/시군구/용도/토픽) 회색 UI → 다크(검정) 톤 강제
+   2) 결과창 스크롤바(오른쪽)도 다크 톤으로
+   3) 저장소 검색 + 지우기 버튼 한 줄 정렬
+   4) 결과 상단 배지들은 좌측에 몰고, "검색어 복사"만 우측 끝으로
+   5) 결과 생성 버튼 폭 = 토픽 select 폭(=100%) 유지
+   6) 전체화면에서 결과창만 스크롤 유지
 */
 
 :root{
-    --bg:#05070c;           /* 전체 배경: 더 검게 */
+    --bg:#05070c;           /* 전체 배경 */
     --card:#0b1020;
     --card2:#0a0f1d;
     --text:#e9eefc;
@@ -23,10 +26,20 @@
   
     --radius:18px;
     --shadow: 0 18px 50px rgba(0,0,0,.55);
+  
+    /* ✅ 스크롤바 다크톤 */
+    --sb-track: rgba(255,255,255,.06);
+    --sb-thumb: rgba(255,255,255,.18);
+    --sb-thumb-hover: rgba(255,255,255,.26);
   }
   
   *{box-sizing:border-box}
   html,body{height:100%}
+  
+  /* ✅ 브라우저 기본 폼/스크롤 컬러스킴을 다크로 우선 */
+  html{
+    color-scheme: dark;
+  }
   
   body{
     margin:0;
@@ -73,7 +86,7 @@
     padding: 16px 18px;
   }
   
-  /* 왼쪽은 스크롤 없이 고정(넘치면 내부에서만 보이게) */
+  /* 왼쪽은 스크롤 없이 고정 */
   .leftColumn{
     height:100%;
     overflow:hidden;
@@ -110,6 +123,44 @@
     height:100%;
     overflow:auto;
     padding-bottom: 22px;
+  
+    /* ✅ 스크롤바(파이어폭스) */
+    scrollbar-width: thin;
+    scrollbar-color: var(--sb-thumb) var(--sb-track);
+  }
+  
+  /* ✅ 결과창 스크롤바(크롬/엣지) */
+  .bigResult::-webkit-scrollbar{
+    width: 10px;
+  }
+  .bigResult::-webkit-scrollbar-track{
+    background: var(--sb-track);
+    border-radius: 999px;
+  }
+  .bigResult::-webkit-scrollbar-thumb{
+    background: var(--sb-thumb);
+    border-radius: 999px;
+    border: 2px solid rgba(0,0,0,.35);
+  }
+  .bigResult::-webkit-scrollbar-thumb:hover{
+    background: var(--sb-thumb-hover);
+  }
+  
+  /* (옵션) 좌측 저장소 리스트가 내부에서 스크롤 생기면 톤 맞춤 */
+  .leftColumn *{
+    scrollbar-width: thin;
+    scrollbar-color: var(--sb-thumb) transparent;
+  }
+  .leftColumn *::-webkit-scrollbar{
+    width: 10px;
+  }
+  .leftColumn *::-webkit-scrollbar-track{
+    background: transparent;
+  }
+  .leftColumn *::-webkit-scrollbar-thumb{
+    background: var(--sb-thumb);
+    border-radius: 999px;
+    border: 2px solid rgba(0,0,0,.35);
   }
   
   /* 패널 */
@@ -142,6 +193,7 @@
     margin-bottom: 8px;
   }
   
+  /* ✅ select / input 다크 강제 */
   .select, .input{
     width:100%;
     padding: 12px 12px;
@@ -150,6 +202,11 @@
     background: rgba(0,0,0,.28);
     color: var(--text);
     outline:none;
+  
+    /* ✅ 기본 위젯(드롭다운 포함) 다크 우선 */
+    color-scheme: dark;
+    -webkit-appearance: none;
+    appearance: none;
   }
   
   .select:focus, .input:focus{
@@ -157,14 +214,21 @@
     box-shadow: 0 0 0 4px rgba(43,108,255,.20);
   }
   
+  /* ✅ 드롭다운 옵션 리스트(가능한 범위 내) 다크 */
+  select option{
+    background-color: #070b14;
+    color: var(--text);
+  }
+  
   /* 버튼 줄 */
   .row.split{
     display:flex;
     gap:10px;
     margin-top: 14px;
+    align-items: stretch;
   }
   
-  /* ✅ 결과 생성 버튼을 토픽 select 폭처럼 꽉 차게(=100%) */
+  /* ✅ 결과 생성 버튼 폭 100% 유지 */
   #btnBuild{
     width:100%;
   }
@@ -179,6 +243,17 @@
     font-size:13px;
   }
   .row.toggles input{transform: translateY(1px);}
+  
+  /* ✅ 저장소 검색 + 지우기 버튼 "한 줄" 고정 */
+  .card .row.split .input{
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .card .row.split .btn{
+    flex: 0 0 auto;
+    white-space: nowrap;
+    min-width: 72px;
+  }
   
   /* ============= Buttons ============= */
   
@@ -217,15 +292,22 @@
   
   /* ============= Context Bar / Badges ============= */
   
+  /* ✅ 배지들은 좌측에 몰고, 복사 버튼만 우측으로 */
   .ctxBar{
     display:flex;
     align-items:center;
-    justify-content:space-between;
+    justify-content:flex-start; /* ✅ 좌측 정렬 */
     gap:10px;
     padding: 10px 10px;
     border-radius: 16px;
     border:1px solid var(--line);
     background: rgba(0,0,0,.22);
+  }
+  
+  /* ✅ "검색어 복사" 버튼을 우측 끝으로 밀기 */
+  #btnCopyQuery{
+    margin-left:auto;
+    white-space: nowrap;
   }
   
   .badge{
@@ -237,7 +319,7 @@
     border:1px solid rgba(255,255,255,.10);
     font-size:12px;
     color: rgba(233,238,252,.92);
-    margin-right:6px;
+    margin-right:0; /* 기존 6px 제거(정렬 깨짐 방지) */
   }
   .badge.soft{background: rgba(43,108,255,.12); border-color: rgba(43,108,255,.18);}
   
