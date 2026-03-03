@@ -1,7 +1,7 @@
 // main.js (FULL REPLACE)
 // archi-law-cl-03 (1~2단계 고도화)
 // - 자동찾기(후보 패널/버튼) 제거 ✅
-// - 자치법규만 고도화 ✅ (추천 TOP 표시)
+// - 자치법규 고도화: "TOP 2 상단 고정"만 남기고, 순위/점수/나머지후보/(검색) 표시는 제거 ✅
 // - 법제처 검색 링크 기반 / 저장은 localStorage
 
 /* =========================
@@ -98,82 +98,60 @@ const SIDO_LIST = [
   ];
   
   const TOPICS = [
-    {
-      key: "SITE_PLAN",
-      label: "대지·배치",
-      keywords: ["대지","접도","건축선","대지안의공지","공개공지","이격"],
-      upperLaws: ["국토의 계획 및 이용에 관한 법률","건축법","건축법 시행령"],
-      ordinKeywords: ["건축","개발행위","지구단위","대지","건축위원회"],
+    { key:"SITE_PLAN", label:"대지·배치",
+      keywords:["대지","접도","건축선","대지안의공지","공개공지","이격"],
+      upperLaws:["국토의 계획 및 이용에 관한 법률","건축법","건축법 시행령"],
+      ordinKeywords:["건축","개발행위","지구단위","대지","건축위원회"],
     },
-    {
-      key: "MASS_HEIGHT",
-      label: "규모·높이",
-      keywords: ["높이","층수","사선","일조","경관","지구단위"],
-      upperLaws: ["건축법","건축법 시행령","국토의 계획 및 이용에 관한 법률"],
-      ordinKeywords: ["경관","고도","지구단위","건축물","일조"],
+    { key:"MASS_HEIGHT", label:"규모·높이",
+      keywords:["높이","층수","사선","일조","경관","지구단위"],
+      upperLaws:["건축법","건축법 시행령","국토의 계획 및 이용에 관한 법률"],
+      ordinKeywords:["경관","고도","지구단위","건축물","일조"],
     },
-    {
-      key: "STRUCTURE_SEISMIC",
-      label: "구조·내진",
-      keywords: ["구조","내진","구조안전","기초","구조기준"],
-      upperLaws: ["건축법","건축법 시행령"],
-      ordinKeywords: ["내진","구조","건축물","안전"],
+    { key:"STRUCTURE_SEISMIC", label:"구조·내진",
+      keywords:["구조","내진","구조안전","기초","구조기준"],
+      upperLaws:["건축법","건축법 시행령"],
+      ordinKeywords:["내진","구조","건축물","안전"],
     },
-    {
-      key: "FIRE_COMPARTMENT",
-      label: "방화·내화",
-      keywords: ["방화구획","내화","방화문","방화셔터","관통부"],
-      upperLaws: ["건축법","건축법 시행령","화재의 예방 및 안전관리에 관한 법률"],
-      ordinKeywords: ["방화","내화","소방","안전"],
+    { key:"FIRE_COMPARTMENT", label:"방화·내화",
+      keywords:["방화구획","내화","방화문","방화셔터","관통부"],
+      upperLaws:["건축법","건축법 시행령","화재의 예방 및 안전관리에 관한 법률"],
+      ordinKeywords:["방화","내화","소방","안전"],
     },
-    {
-      key: "EVAC_SAFETY",
-      label: "피난·안전",
-      keywords: ["피난","직통계단","피난계단","출구","피난거리","복도"],
-      upperLaws: ["건축법","건축법 시행령","화재의 예방 및 안전관리에 관한 법률"],
-      ordinKeywords: ["피난","계단","대피","안전"],
+    { key:"EVAC_SAFETY", label:"피난·안전",
+      keywords:["피난","직통계단","피난계단","출구","피난거리","복도"],
+      upperLaws:["건축법","건축법 시행령","화재의 예방 및 안전관리에 관한 법률"],
+      ordinKeywords:["피난","계단","대피","안전"],
     },
-    {
-      key: "BF_ACCESS",
-      label: "장애인·BF",
-      keywords: ["장애인","편의시설","무장애","BF","승강기"],
-      upperLaws: ["장애인·노인·임산부 등의 편의증진 보장에 관한 법률","건축법 시행령"],
-      ordinKeywords: ["장애인","편의","무장애","BF"],
+    { key:"BF_ACCESS", label:"장애인·BF",
+      keywords:["장애인","편의시설","무장애","BF","승강기"],
+      upperLaws:["장애인·노인·임산부 등의 편의증진 보장에 관한 법률","건축법 시행령"],
+      ordinKeywords:["장애인","편의","무장애","BF"],
     },
-    {
-      key: "MEP_ELECT",
-      label: "설비·전기",
-      keywords: ["기계실","전기","환기","위생","설비","설비실"],
-      upperLaws: ["건축법","건축법 시행령"],
-      ordinKeywords: ["설비","위생","환기"],
+    { key:"MEP_ELECT", label:"설비·전기",
+      keywords:["기계실","전기","환기","위생","설비","설비실"],
+      upperLaws:["건축법","건축법 시행령"],
+      ordinKeywords:["설비","위생","환기"],
     },
-    {
-      key: "ENERGY_GREEN",
-      label: "에너지·친환경",
-      keywords: ["에너지절약","단열","열관류율","ZEB","신재생"],
-      upperLaws: ["녹색건축물 조성 지원법","에너지이용 합리화법","건축물의 에너지절약설계기준"],
-      ordinKeywords: ["에너지","녹색","친환경","신재생"],
+    { key:"ENERGY_GREEN", label:"에너지·친환경",
+      keywords:["에너지절약","단열","열관류율","ZEB","신재생"],
+      upperLaws:["녹색건축물 조성 지원법","에너지이용 합리화법","건축물의 에너지절약설계기준"],
+      ordinKeywords:["에너지","녹색","친환경","신재생"],
     },
-    {
-      key: "PARKING",
-      label: "주차",
-      keywords: ["부설주차장","주차대수","장애인주차","기계식","전기차충전"],
-      upperLaws: ["주차장법","주차장법 시행령","건축법 시행령"],
-      ordinKeywords: ["부설주차장","주차","주차장"],
+    { key:"PARKING", label:"주차",
+      keywords:["부설주차장","주차대수","장애인주차","기계식","전기차충전"],
+      upperLaws:["주차장법","주차장법 시행령","건축법 시행령"],
+      ordinKeywords:["부설주차장","주차","주차장"],
     },
-    {
-      key: "FIRE_SERVICE",
-      label: "소방",
-      keywords: ["소방시설","스프링클러","제연","감지기","비상방송"],
-      upperLaws: ["소방시설 설치 및 관리에 관한 법률","화재의 예방 및 안전관리에 관한 법률"],
-      ordinKeywords: ["소방","화재","안전"],
+    { key:"FIRE_SERVICE", label:"소방",
+      keywords:["소방시설","스프링클러","제연","감지기","비상방송"],
+      upperLaws:["소방시설 설치 및 관리에 관한 법률","화재의 예방 및 안전관리에 관한 법률"],
+      ordinKeywords:["소방","화재","안전"],
     },
-    {
-      key: "REVIEW_PERMIT",
-      label: "심의·인허가",
-      keywords: ["건축위원회","심의","경관심의","교통영향","재해","인허가"],
-      upperLaws: ["건축법","건축법 시행령","국토의 계획 및 이용에 관한 법률"],
-      ordinKeywords: ["심의","위원회","경관","교통","재해"],
+    { key:"REVIEW_PERMIT", label:"심의·인허가",
+      keywords:["건축위원회","심의","경관심의","교통영향","재해","인허가"],
+      upperLaws:["건축법","건축법 시행령","국토의 계획 및 이용에 관한 법률"],
+      ordinKeywords:["심의","위원회","경관","교통","재해"],
     },
   ];
   
@@ -183,25 +161,25 @@ const SIDO_LIST = [
   
   const LS_KEY = "archiLawCl03.library.v1";
   
-  function $(id) { return document.getElementById(id); }
-  function clean(s) { return String(s ?? "").trim(); }
-  function uniq(arr) { return [...new Set((arr ?? []).filter(Boolean))]; }
-  function nowIso() { return new Date().toISOString(); }
+  function $(id){ return document.getElementById(id); }
+  function clean(s){ return String(s ?? "").trim(); }
+  function uniq(arr){ return [...new Set((arr ?? []).filter(Boolean))]; }
+  function nowIso(){ return new Date().toISOString(); }
   
-  function escapeHtml(str) {
+  function escapeHtml(str){
     return String(str ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
   }
   
-  async function copyToClipboard(text) {
-    try {
+  async function copyToClipboard(text){
+    try{
       await navigator.clipboard.writeText(text);
       toast("복사됨");
-    } catch {
+    }catch{
       const ta = document.createElement("textarea");
       ta.value = text;
       document.body.appendChild(ta);
@@ -213,10 +191,10 @@ const SIDO_LIST = [
   }
   
   let _toastTimer = null;
-  function toast(msg) {
+  function toast(msg){
     clearTimeout(_toastTimer);
     let el = document.getElementById("__toast");
-    if (!el) {
+    if(!el){
       el = document.createElement("div");
       el.id = "__toast";
       el.style.position = "fixed";
@@ -235,29 +213,29 @@ const SIDO_LIST = [
     }
     el.textContent = msg;
     el.style.opacity = "1";
-    _toastTimer = setTimeout(() => (el.style.opacity = "0"), 1400);
+    _toastTimer = setTimeout(()=> (el.style.opacity="0"), 1400);
   }
   
   /* =========================
      법제처 링크 (검색)
   ========================= */
   
-  function lawSearchUrl(query) {
+  function lawSearchUrl(query){
     const q = encodeURIComponent(query);
     return `https://www.law.go.kr/LSW/main.html#${q}`;
   }
   
-  function buildOrdinanceQuery({ sido, sigungu, kw, useLabel }) {
+  function buildOrdinanceQuery({ sido, sigungu, kw, useLabel }){
     const parts = [];
-    if (sido) parts.push(sido);
-    if (sigungu) parts.push(sigungu);
-    if (kw) parts.push(kw);
-    if (useLabel) parts.push(useLabel);
+    if(sido) parts.push(sido);
+    if(sigungu) parts.push(sigungu);
+    if(kw) parts.push(kw);
+    if(useLabel) parts.push(useLabel);
     parts.push("조례");
     return parts.join(" ");
   }
   
-  function buildUpperLawQuery(lawName, topicLabel) {
+  function buildUpperLawQuery(lawName, topicLabel){
     return `${lawName} ${topicLabel}`.trim();
   }
   
@@ -265,35 +243,35 @@ const SIDO_LIST = [
      저장소
   ========================= */
   
-  function loadLibrary() {
+  function loadLibrary(){
     const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return { sources: {} };
-    try {
+    if(!raw) return { sources:{} };
+    try{
       const v = JSON.parse(raw);
-      if (!v || typeof v !== "object") return { sources: {} };
-      if (!v.sources || typeof v.sources !== "object") v.sources = {};
+      if(!v || typeof v !== "object") return { sources:{} };
+      if(!v.sources || typeof v.sources !== "object") v.sources = {};
       return v;
-    } catch {
-      return { sources: {} };
+    }catch{
+      return { sources:{} };
     }
   }
   
-  function saveLibrary(lib) {
+  function saveLibrary(lib){
     localStorage.setItem(LS_KEY, JSON.stringify(lib));
   }
   
-  function makeSourceId({ type, name, jurisdiction }) {
+  function makeSourceId({ type, name, jurisdiction }){
     const j = clean(jurisdiction) || "-";
     return `${type}::${name}::${j}`;
   }
   
-  function upsertSource({ type, name, jurisdiction, query, url, topicLabel, useLabel }) {
+  function upsertSource({ type, name, jurisdiction, query, url, topicLabel, useLabel }){
     const lib = loadLibrary();
     const id = makeSourceId({ type, name, jurisdiction });
   
     const existing = lib.sources[id];
     const nextTopics = uniq([...(existing?.topics ?? []), topicLabel]);
-    const nextUses = uniq([...(existing?.uses ?? []), useLabel].filter((x) => x && x !== "(미선택)"));
+    const nextUses = uniq([...(existing?.uses ?? []), useLabel].filter((x)=> x && x !== "(미선택)"));
   
     lib.sources[id] = {
       id,
@@ -312,77 +290,75 @@ const SIDO_LIST = [
     return lib.sources[id];
   }
   
-  function removeSource(id) {
+  function removeSource(id){
     const lib = loadLibrary();
     delete lib.sources[id];
     saveLibrary(lib);
   }
   
   /* =========================
-     시군구: select 우선(현재 UI 기준)
+     시군구
   ========================= */
   
-  function getSigunguValue() {
+  function getSigunguValue(){
     const sel = $("selSigungu");
-    if (sel) return clean(sel.value);
+    if(sel) return clean(sel.value);
     const inp = $("inpSigungu"); // 구버전 호환
-    if (inp) return clean(inp.value);
+    if(inp) return clean(inp.value);
     return "";
   }
   
-  function resetSigunguUI() {
+  function resetSigunguUI(){
     const sel = $("selSigungu");
-    if (sel) sel.value = "";
+    if(sel) sel.value = "";
     const inp = $("inpSigungu");
-    if (inp) inp.value = "";
+    if(inp) inp.value = "";
   }
   
-  function setSigunguOptionsForSido(sido) {
-    const list = (SIGUNGU_BY_SIDO[sido] ?? []).slice().sort((a, b) => a.localeCompare(b, "ko-KR"));
+  function setSigunguOptionsForSido(sido){
+    const list = (SIGUNGU_BY_SIDO[sido] ?? []).slice().sort((a,b)=> a.localeCompare(b,"ko-KR"));
     const sel = $("selSigungu");
-    if (sel) {
+    if(sel){
       sel.innerHTML =
         `<option value="">(시군구 선택)</option>` +
-        list.map((x) => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
+        list.map((x)=> `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
     }
-  
-    // 구버전 datalist 호환
     const dl = $("dlSigungu");
-    if (dl) dl.innerHTML = list.map((x) => `<option value="${escapeHtml(x)}"></option>`).join("");
+    if(dl) dl.innerHTML = list.map((x)=> `<option value="${escapeHtml(x)}"></option>`).join("");
   }
   
   /* =========================
      UI 초기화
   ========================= */
   
-  function getUseLabelByCode(code) {
-    return USES.find((u) => u.code === code)?.label ?? "(미선택)";
+  function getUseLabelByCode(code){
+    return USES.find((u)=> u.code === code)?.label ?? "(미선택)";
   }
-  function getTopicByKey(key) {
-    return TOPICS.find((t) => t.key === key) ?? null;
+  function getTopicByKey(key){
+    return TOPICS.find((t)=> t.key === key) ?? null;
   }
   
-  function initSelects() {
+  function initSelects(){
     const selSido = $("selSido");
     const selUse = $("selUse");
     const selTopic = $("selTopic");
   
-    if (selSido) {
+    if(selSido){
       selSido.innerHTML =
         `<option value="">(시도 선택)</option>` +
-        SIDO_LIST.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+        SIDO_LIST.map((s)=> `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
     }
-    if (selUse) {
-      selUse.innerHTML = USES.map((u) => `<option value="${escapeHtml(u.code)}">${escapeHtml(u.label)}</option>`).join("");
+    if(selUse){
+      selUse.innerHTML = USES.map((u)=> `<option value="${escapeHtml(u.code)}">${escapeHtml(u.label)}</option>`).join("");
     }
-    if (selTopic) {
+    if(selTopic){
       selTopic.innerHTML =
         `<option value="">(토픽 선택)</option>` +
-        TOPICS.map((t) => `<option value="${escapeHtml(t.key)}">${escapeHtml(t.label)}</option>`).join("");
+        TOPICS.map((t)=> `<option value="${escapeHtml(t.key)}">${escapeHtml(t.label)}</option>`).join("");
     }
   
-    if (selSido) {
-      selSido.addEventListener("change", () => {
+    if(selSido){
+      selSido.addEventListener("change", ()=>{
         const sido = clean(selSido.value);
         resetSigunguUI();
         setSigunguOptionsForSido(sido);
@@ -390,7 +366,7 @@ const SIDO_LIST = [
     }
   }
   
-  function validateInputs() {
+  function validateInputs(){
     const sido = clean($("selSido")?.value);
     const sigungu = getSigunguValue();
     const useCode = $("selUse")?.value ?? "";
@@ -398,35 +374,35 @@ const SIDO_LIST = [
     const topicKey = $("selTopic")?.value ?? "";
     const topic = getTopicByKey(topicKey);
   
-    if (!sido) return { ok: false, msg: "시도를 선택해줘." };
-    if (!sigungu) return { ok: false, msg: "시군구를 선택해줘." };
-    if (!topic) return { ok: false, msg: "토픽을 선택해줘." };
+    if(!sido) return { ok:false, msg:"시도를 선택해줘." };
+    if(!sigungu) return { ok:false, msg:"시군구를 선택해줘." };
+    if(!topic) return { ok:false, msg:"토픽을 선택해줘." };
   
-    return { ok: true, ctx: { sido, sigungu, useLabel, topic } };
+    return { ok:true, ctx:{ sido, sigungu, useLabel, topic } };
   }
   
-  function setCtxBar({ sido, sigungu, useLabel, topicLabel }) {
+  function setCtxBar({ sido, sigungu, useLabel, topicLabel }){
     const bSido = $("bSido");
     const bSigungu = $("bSigungu");
     const bUse = $("bUse");
     const bTopic = $("bTopic");
-    if (bSido) bSido.textContent = sido;
-    if (bSigungu) bSigungu.textContent = sigungu;
-    if (bUse) bUse.textContent = `용도: ${useLabel || "(미선택)"}`;
-    if (bTopic) bTopic.textContent = `토픽: ${topicLabel}`;
+    if(bSido) bSido.textContent = sido;
+    if(bSigungu) bSigungu.textContent = sigungu;
+    if(bUse) bUse.textContent = `용도: ${useLabel || "(미선택)"}`;
+    if(bTopic) bTopic.textContent = `토픽: ${topicLabel}`;
   }
   
   /* =========================
      렌더링
   ========================= */
   
-  function renderItem({ title, subtitle, meta = [], actions = [] }) {
+  function renderItem({ title, subtitle, meta = [], actions = [] }){
     const el = document.createElement("div");
     el.className = "item";
   
     const metaHtml = meta
       .filter(Boolean)
-      .map((m) => `<span class="metaPill ${m.cls ?? ""}">${escapeHtml(m.text)}</span>`)
+      .map((m)=> `<span class="metaPill ${m.cls ?? ""}">${escapeHtml(m.text)}</span>`)
       .join("");
   
     el.innerHTML = `
@@ -441,7 +417,7 @@ const SIDO_LIST = [
     `;
   
     const act = el.querySelector(".itemActions");
-    actions.forEach((a) => {
+    actions.forEach((a)=>{
       const b = document.createElement("button");
       b.className = `btn ${a.cls ?? ""}`;
       b.textContent = a.label;
@@ -453,29 +429,21 @@ const SIDO_LIST = [
   }
   
   /* =========================
-     자치법규 추천(Top) 스코어링
-     - 아직 “확정”은 아니고, 실무적으로 가장 유력한 검색어를 상단에 고정
+     자치법규 TOP 2 고정 (표시는 "추천"만)
   ========================= */
-  function scoreOrdinanceCandidate({ kw, useLabel, topic }) {
+  
+  function scoreOrdinanceCandidate({ kw, useLabel, topic }){
+    // 내부 정렬용 점수(표시하지 않음)
     let score = 0;
+    if(topic?.ordinKeywords?.includes(kw)) score += 30;
+    if(useLabel && useLabel !== "(미선택)") score += 8;
   
-    // 토픽의 ordinKeywords에 포함된 키워드면 가산
-    if (topic?.ordinKeywords?.includes(kw)) score += 30;
-  
-    // 토픽 label과 가까운 키워드면 가산 (간단히 포함 검사)
-    if (topic?.label && kw && topic.label.includes(kw)) score += 10;
-  
-    // 용도 선택 시, 용도 포함 쿼리는 실무적으로 유리한 경우가 많아 가산
-    if (useLabel && useLabel !== "(미선택)") score += 8;
-  
-    // 짧고 일반적인 키워드(건축/대지/안전 등)는 너무 넓게 걸려서 약간 감점
-    const tooBroad = ["건축", "안전", "대지", "건축물"];
-    if (tooBroad.includes(kw)) score -= 6;
-  
+    const tooBroad = ["건축","안전","대지","건축물"];
+    if(tooBroad.includes(kw)) score -= 6;
     return score;
   }
   
-  function renderResultLists(ctx) {
+  function renderResultLists(ctx){
     const { sido, sigungu, useLabel, topic } = ctx;
     setCtxBar({ sido, sigungu, useLabel, topicLabel: topic.label });
   
@@ -485,148 +453,101 @@ const SIDO_LIST = [
     const upperList = $("upperList");
     const ordinList = $("ordinList");
   
-    if (upperList) upperList.innerHTML = "";
-    if (ordinList) ordinList.innerHTML = "";
+    if(upperList) upperList.innerHTML = "";
+    if(ordinList) ordinList.innerHTML = "";
   
     const seen = new Set();
   
     // 상위법
-    if (upperList) {
-      if (!includeAct) {
+    if(upperList){
+      if(!includeAct){
         upperList.innerHTML = `<div class="hint">상위법 표시가 꺼져있습니다.</div>`;
-      } else {
-        topic.upperLaws.forEach((lawName) => {
+      }else{
+        topic.upperLaws.forEach((lawName)=>{
           const q = buildUpperLawQuery(lawName, topic.label);
           const url = lawSearchUrl(q);
-          const id = makeSourceId({ type: "상위법", name: lawName, jurisdiction: "-" });
+          const id = makeSourceId({ type:"상위법", name:lawName, jurisdiction:"-" });
           const dup = seen.has(id);
-          if (!dup) seen.add(id);
+          if(!dup) seen.add(id);
   
           upperList.appendChild(
             renderItem({
               title: lawName,
               subtitle: q,
               meta: [
-                { text: "상위법", cls: "good" },
-                { text: `토픽:${topic.label}` },
-                useLabel !== "(미선택)" ? { text: `용도:${useLabel}` } : null,
-                dup ? { text: "중복(묶임)", cls: "warn" } : null,
+                { text:"상위법", cls:"good" },
+                { text:`토픽:${topic.label}` },
+                useLabel !== "(미선택)" ? { text:`용도:${useLabel}` } : null,
+                dup ? { text:"중복(묶임)", cls:"warn" } : null,
               ],
               actions: [
-                { label: "열기", onClick: () => window.open(url, "_blank", "noopener,noreferrer") },
-                { label: "복사", onClick: () => copyToClipboard(url) },
+                { label:"열기", onClick: ()=> window.open(url,"_blank","noopener,noreferrer") },
+                { label:"복사", onClick: ()=> copyToClipboard(url) },
                 {
-                  label: "저장",
-                  onClick: () => {
-                    upsertSource({ type: "상위법", name: lawName, jurisdiction: "-", query: q, url, topicLabel: topic.label, useLabel });
+                  label:"저장",
+                  onClick: ()=>{
+                    upsertSource({ type:"상위법", name:lawName, jurisdiction:"-", query:q, url, topicLabel:topic.label, useLabel });
                     toast("저장됨");
                     renderLibrary();
-                  },
-                },
-              ],
+                  }
+                }
+              ]
             })
           );
         });
       }
     }
   
-    // 자치법규 (추천 TOP 상단 고정)
-    if (ordinList) {
-      if (!includeOrdin) {
+    // 자치법규
+    if(ordinList){
+      if(!includeOrdin){
         ordinList.innerHTML = `<div class="hint">자치법규 표시가 꺼져있습니다.</div>`;
-      } else {
+      }else{
+        const jurisdiction = `${sido} ${sigungu}`;
         const kws = uniq(topic.ordinKeywords);
   
-        // 후보 생성 + 스코어링
-        const candidates = kws.map((kw) => ({
-          kw,
-          score: scoreOrdinanceCandidate({ kw, useLabel, topic }),
-        }))
-        .sort((a, b) => b.score - a.score);
+        const candidates = kws
+          .map((kw)=> ({ kw, score: scoreOrdinanceCandidate({ kw, useLabel, topic }) }))
+          .sort((a,b)=> b.score - a.score);
   
-        const top = candidates.slice(0, 2);
-        const rest = candidates.slice(2);
+        const topSet = new Set(candidates.slice(0,2).map((x)=> x.kw));
   
-        // ✅ TOP 먼저
-        top.forEach(({ kw, score }, idx) => {
-          const q = buildOrdinanceQuery({ sido, sigungu, kw, useLabel: useLabel !== "(미선택)" ? useLabel : "" });
+        candidates.forEach(({ kw })=>{
+          const q = buildOrdinanceQuery({
+            sido, sigungu, kw,
+            useLabel: useLabel !== "(미선택)" ? useLabel : ""
+          });
           const url = lawSearchUrl(q);
-          const name = `${kw} 관련 조례/규칙(검색)`;
-          const jurisdiction = `${sido} ${sigungu}`;
-          const id = makeSourceId({ type: "자치법규", name, jurisdiction });
+  
+          // ✅ "(검색)" 제거: 이름만 깔끔하게
+          const name = `${kw} 관련 조례/규칙`;
+          const id = makeSourceId({ type:"자치법규", name, jurisdiction });
           const dup = seen.has(id);
-          if (!dup) seen.add(id);
+          if(!dup) seen.add(id);
   
           ordinList.appendChild(
             renderItem({
               title: name,
               subtitle: q,
               meta: [
-                { text: "추천 TOP", cls: "warn" },
-                { text: "자치법규", cls: "good" },
-                { text: `지자체:${sigungu}` },
-                { text: `키워드:${kw}` },
-                { text: `점수:${score}` },
-                dup ? { text: "중복(묶임)", cls: "warn" } : null,
+                topSet.has(kw) ? { text:"추천", cls:"warn" } : null,
+                { text:"자치법규", cls:"good" },
+                { text:`지자체:${sigungu}` },
+                { text:`키워드:${kw}` },
+                dup ? { text:"중복(묶임)", cls:"warn" } : null,
               ],
               actions: [
-                { label: "열기", onClick: () => window.open(url, "_blank", "noopener,noreferrer") },
-                { label: "복사", onClick: () => copyToClipboard(url) },
+                { label:"열기", onClick: ()=> window.open(url,"_blank","noopener,noreferrer") },
+                { label:"복사", onClick: ()=> copyToClipboard(url) },
                 {
-                  label: "저장",
-                  onClick: () => {
-                    upsertSource({ type: "자치법규", name, jurisdiction, query: q, url, topicLabel: topic.label, useLabel });
+                  label:"저장",
+                  onClick: ()=>{
+                    upsertSource({ type:"자치법규", name, jurisdiction, query:q, url, topicLabel:topic.label, useLabel });
                     toast("저장됨");
                     renderLibrary();
-                  },
-                },
-              ],
-            })
-          );
-        });
-  
-        // 구분선(시각적으로만)
-        if (rest.length > 0) {
-          const sep = document.createElement("div");
-          sep.className = "hint";
-          sep.style.margin = "6px 2px 2px";
-          sep.textContent = "나머지 후보";
-          ordinList.appendChild(sep);
-        }
-  
-        // ✅ 나머지
-        rest.forEach(({ kw, score }) => {
-          const q = buildOrdinanceQuery({ sido, sigungu, kw, useLabel: useLabel !== "(미선택)" ? useLabel : "" });
-          const url = lawSearchUrl(q);
-          const name = `${kw} 관련 조례/규칙(검색)`;
-          const jurisdiction = `${sido} ${sigungu}`;
-          const id = makeSourceId({ type: "자치법규", name, jurisdiction });
-          const dup = seen.has(id);
-          if (!dup) seen.add(id);
-  
-          ordinList.appendChild(
-            renderItem({
-              title: name,
-              subtitle: q,
-              meta: [
-                { text: "자치법규", cls: "good" },
-                { text: `지자체:${sigungu}` },
-                { text: `키워드:${kw}` },
-                { text: `점수:${score}` },
-                dup ? { text: "중복(묶임)", cls: "warn" } : null,
-              ],
-              actions: [
-                { label: "열기", onClick: () => window.open(url, "_blank", "noopener,noreferrer") },
-                { label: "복사", onClick: () => copyToClipboard(url) },
-                {
-                  label: "저장",
-                  onClick: () => {
-                    upsertSource({ type: "자치법규", name, jurisdiction, query: q, url, topicLabel: topic.label, useLabel });
-                    toast("저장됨");
-                    renderLibrary();
-                  },
-                },
-              ],
+                  }
+                }
+              ]
             })
           );
         });
@@ -638,7 +559,7 @@ const SIDO_LIST = [
      저장소 렌더링
   ========================= */
   
-  function renderLibrary() {
+  function renderLibrary(){
     const lib = loadLibrary();
     const sources = Object.values(lib.sources ?? {});
     const listEl = $("libList");
@@ -646,25 +567,25 @@ const SIDO_LIST = [
   
     const filtered = !filter
       ? sources
-      : sources.filter((s) => {
+      : sources.filter((s)=>{
           const hay = [s.type, s.name, s.jurisdiction, ...(s.topics ?? []), ...(s.uses ?? []), s.query].join(" ").toLowerCase();
           return hay.includes(filter);
         });
   
-    if ($("statSources")) $("statSources").textContent = String(sources.length);
-    if ($("statTags")) $("statTags").textContent = String(sources.reduce((acc, s) => acc + (s.topics?.length ?? 0), 0));
+    if($("statSources")) $("statSources").textContent = String(sources.length);
+    if($("statTags")) $("statTags").textContent = String(sources.reduce((acc, s)=> acc + (s.topics?.length ?? 0), 0));
   
-    if (!listEl) return;
+    if(!listEl) return;
     listEl.innerHTML = "";
   
     filtered
-      .sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)))
-      .forEach((s) => {
+      .sort((a,b)=> String(b.updated_at).localeCompare(String(a.updated_at)))
+      .forEach((s)=>{
         const el = document.createElement("div");
         el.className = "libItem";
   
-        const tags = uniq([...(s.topics ?? [])]).map((t) => `<span class="metaPill">${escapeHtml(t)}</span>`).join("");
-        const uses = uniq([...(s.uses ?? [])]).map((u) => `<span class="metaPill warn">${escapeHtml(u)}</span>`).join("");
+        const tags = uniq([...(s.topics ?? [])]).map((t)=> `<span class="metaPill">${escapeHtml(t)}</span>`).join("");
+        const uses = uniq([...(s.uses ?? [])]).map((u)=> `<span class="metaPill warn">${escapeHtml(u)}</span>`).join("");
   
         el.innerHTML = `
           <div class="top">
@@ -682,10 +603,10 @@ const SIDO_LIST = [
           <div class="hint" style="margin-top:10px; word-break:break-word;">${escapeHtml(s.query || "")}</div>
         `;
   
-        el.querySelector('[data-act="open"]').addEventListener("click", () => window.open(s.url, "_blank", "noopener,noreferrer"));
-        el.querySelector('[data-act="copy"]').addEventListener("click", () => copyToClipboard(s.url));
-        el.querySelector('[data-act="del"]').addEventListener("click", () => {
-          if (!confirm("정말 삭제할까?")) return;
+        el.querySelector('[data-act="open"]').addEventListener("click", ()=> window.open(s.url,"_blank","noopener,noreferrer"));
+        el.querySelector('[data-act="copy"]').addEventListener("click", ()=> copyToClipboard(s.url));
+        el.querySelector('[data-act="del"]').addEventListener("click", ()=>{
+          if(!confirm("정말 삭제할까?")) return;
           removeSource(s.id);
           renderLibrary();
           toast("삭제됨");
@@ -694,7 +615,7 @@ const SIDO_LIST = [
         listEl.appendChild(el);
       });
   
-    if (filtered.length === 0) {
+    if(filtered.length === 0){
       listEl.innerHTML = `<div class="hint">저장된 항목이 없습니다. (또는 필터 결과 없음)</div>`;
     }
   }
@@ -703,33 +624,33 @@ const SIDO_LIST = [
      이벤트
   ========================= */
   
-  function on(el, ev, fn) { if (el) el.addEventListener(ev, fn); }
+  function on(el, ev, fn){ if(el) el.addEventListener(ev, fn); }
   
-  function bindEvents() {
-    on($("btnBuild"), "click", () => {
+  function bindEvents(){
+    on($("btnBuild"), "click", ()=>{
       const v = validateInputs();
-      if (!v.ok) return toast(v.msg);
+      if(!v.ok) return toast(v.msg);
       renderResultLists(v.ctx);
     });
   
-    on($("btnCopyQuery"), "click", async () => {
+    on($("btnCopyQuery"), "click", async ()=>{
       const v = validateInputs();
-      if (!v.ok) return toast("먼저 시도/시군구/토픽을 선택해줘.");
+      if(!v.ok) return toast("먼저 시도/시군구/토픽을 선택해줘.");
       const { sido, sigungu, useLabel, topic } = v.ctx;
       const kw = topic.ordinKeywords?.[0] ?? topic.keywords?.[0] ?? topic.label;
       const q = buildOrdinanceQuery({ sido, sigungu, kw, useLabel: useLabel !== "(미선택)" ? useLabel : "" });
       await copyToClipboard(q);
     });
   
-    on($("inpFilter"), "input", () => renderLibrary());
-    on($("btnClearFilter"), "click", () => {
+    on($("inpFilter"), "input", ()=> renderLibrary());
+    on($("btnClearFilter"), "click", ()=>{
       const inp = $("inpFilter");
-      if (inp) inp.value = "";
+      if(inp) inp.value = "";
       renderLibrary();
     });
   
-    on($("btnReset"), "click", () => {
-      if (!confirm("로컬 저장소를 초기화할까? (저장된 소스가 모두 삭제됨)")) return;
+    on($("btnReset"), "click", ()=>{
+      if(!confirm("로컬 저장소를 초기화할까? (저장된 소스가 모두 삭제됨)")) return;
       localStorage.removeItem(LS_KEY);
       renderLibrary();
       toast("초기화됨");
@@ -740,7 +661,7 @@ const SIDO_LIST = [
      부트
   ========================= */
   
-  function boot() {
+  function boot(){
     initSelects();
     bindEvents();
     renderLibrary();
