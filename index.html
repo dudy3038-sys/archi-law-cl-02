@@ -12,20 +12,12 @@
         <div class="logo">A</div>
         <div class="brandText">
           <div class="name">archi-law-cl-03</div>
-          <div class="sub">지자체 + 용도 + 토픽 → 법제처 기반 링크/전체조문 수집(준비)</div>
+          <div class="sub">지자체 + 용도 + 토픽 → 법제처 링크 모음</div>
         </div>
       </div>
 
       <div class="topActions">
-        <button id="btnExport" class="btn ghost" title="현재 저장소를 JSON으로 내보내기">
-          내보내기(JSON)
-        </button>
-        <button id="btnImport" class="btn ghost" title="JSON을 가져와 저장소를 복원">
-          가져오기(JSON)
-        </button>
-        <button id="btnReset" class="btn danger" title="로컬 저장소 초기화">
-          초기화
-        </button>
+        <button id="btnReset" class="btn danger" title="로컬 저장소 초기화">초기화</button>
       </div>
     </header>
 
@@ -38,31 +30,36 @@
         </div>
 
         <div class="form">
+          <!-- ✅ 가로 1줄 배치: 시도/시군구/용도 -->
           <div class="row">
-            <label class="label">시도 <span class="req">필수</span></label>
-            <select id="selSido" class="select"></select>
-          </div>
+            <label class="label">지자체/용도</label>
 
-          <div class="row">
-            <label class="label">시군구 <span class="req">필수</span></label>
-            <input
-              id="inpSigungu"
-              class="input"
-              list="dlSigungu"
-              placeholder="예) 종로구, 성남시, 해운대구… (직접 입력 가능)"
-              autocomplete="off"
-            />
-            <datalist id="dlSigungu"></datalist>
-            <div class="hint">
-              * 시군구 데이터는 우선 “추천 목록 + 직접 입력” 방식. 필요하면 전체 목록으로 확장 가능.
+            <div class="row3">
+              <div class="field">
+                <div class="fieldLabel">시도 <span class="req">필수</span></div>
+                <select id="selSido" class="select"></select>
+              </div>
+
+              <div class="field">
+                <div class="fieldLabel">시군구 <span class="req">필수</span></div>
+                <input
+                  id="inpSigungu"
+                  class="input"
+                  list="dlSigungu"
+                  placeholder="시군구 선택/입력"
+                  autocomplete="off"
+                />
+                <datalist id="dlSigungu"></datalist>
+              </div>
+
+              <div class="field">
+                <div class="fieldLabel">건축물 용도 <span class="opt">선택</span></div>
+                <select id="selUse" class="select"></select>
+              </div>
             </div>
-          </div>
 
-          <div class="row">
-            <label class="label">건축물 용도 (별표1) <span class="opt">선택</span></label>
-            <select id="selUse" class="select"></select>
             <div class="hint">
-              * 용도는 토픽 검색 키워드/우선순위 보정에 사용 (없어도 동작).
+              * 시군구는 전체 목록 제공(가나다순) + 직접 입력 가능. 시도 변경 시 시군구는 자동 초기화.
             </div>
           </div>
 
@@ -77,15 +74,6 @@
           </div>
 
           <div class="divider"></div>
-
-          <div class="row">
-            <label class="label">중복 처리 정책</label>
-            <div class="pillBox">
-              <span class="pill">소스(법령/조례)는 1회 저장</span>
-              <span class="pill">토픽은 태그로 다대다 연결</span>
-              <span class="pill">화면은 “묶기 + 배지”로 표시</span>
-            </div>
-          </div>
 
           <div class="row">
             <label class="label">법제처 검색 옵션</label>
@@ -105,9 +93,7 @@
       <section class="card">
         <div class="cardHead">
           <h2>결과</h2>
-          <p class="muted">
-            토픽별 링크는 “법제처 검색” 방식으로 안정적으로 연결합니다. (정확한 상세 URL 고정은 다음 단계에서 강화)
-          </p>
+          <p class="muted">선택한 조건으로 법제처 검색 링크를 생성합니다.</p>
         </div>
 
         <div id="ctxBar" class="ctxBar">
@@ -153,9 +139,7 @@
       <section class="card">
         <div class="cardHead">
           <h2>저장소</h2>
-          <p class="muted">
-            “소스 1회 저장 + 토픽 태그” 구조로 중복 없이 누적됩니다.
-          </p>
+          <p class="muted">저장된 항목은 브라우저 로컬에 누적됩니다.</p>
         </div>
 
         <div class="row split">
@@ -177,43 +161,10 @@
         <div id="libList" class="libList"></div>
 
         <div class="footerNote">
-          * 저장은 브라우저 로컬(localStorage)에만 저장됩니다. (사무소 공유 저장은 다음 단계에서 옵션 추가)
+          * 공유/팀 저장(사무소 공용)은 다음 단계에서 옵션으로 확장 가능.
         </div>
       </section>
     </main>
-
-    <!-- Import modal -->
-    <dialog id="dlgImport" class="dlg">
-      <form method="dialog" class="dlgBody">
-        <div class="dlgHead">
-          <div class="dlgTitle">가져오기(JSON)</div>
-          <button class="btn ghost" value="cancel">닫기</button>
-        </div>
-        <textarea
-          id="taImport"
-          class="textarea"
-          placeholder='여기에 JSON 붙여넣기 (내보내기한 내용)'
-        ></textarea>
-        <div class="dlgActions">
-          <button id="btnDoImport" class="btn primary" value="ok">가져오기</button>
-        </div>
-      </form>
-    </dialog>
-
-    <!-- Export modal -->
-    <dialog id="dlgExport" class="dlg">
-      <form method="dialog" class="dlgBody">
-        <div class="dlgHead">
-          <div class="dlgTitle">내보내기(JSON)</div>
-          <button class="btn ghost" value="cancel">닫기</button>
-        </div>
-        <textarea id="taExport" class="textarea" readonly></textarea>
-        <div class="dlgActions">
-          <button id="btnCopyExport" class="btn">복사</button>
-          <button class="btn primary" value="ok">확인</button>
-        </div>
-      </form>
-    </dialog>
 
     <script type="module" src="./main.js"></script>
   </body>
