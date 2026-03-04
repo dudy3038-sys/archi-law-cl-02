@@ -1,14 +1,12 @@
 /* style.css (FULL REPLACE)
    archi-law-cl-03 dark UI
-   요청 반영(요청한 것만):
-   1) 모든 select 드롭다운(시도/시군구/용도/토픽) 회색 UI → 다크(검정) 톤 강제
-   2) 결과창 스크롤바(오른쪽)도 다크 톤으로
-   3) 저장소 검색 + 지우기 버튼 한 줄 정렬
-   4) 결과 상단 배지들은 좌측에 몰고, "검색어 복사"만 우측 끝으로
-   5) 결과 생성 버튼 폭 = 토픽 select 폭(=100%) 유지
-   6) 전체화면에서 결과창만 스크롤 유지
-   7) (추가요청) 저장소에서 "리스트만" 스크롤
-   8) (추가요청) 결과에서 "선택값(상단바) 고정" + 상위법부터 스크롤
+
+   ✅ 최종 반영(요청 확정본)
+   1) 저장소 영역: “검색창 + 지우기 버튼(필터 UI)” 화면에서 제거 + 공백 없이 위로 당김
+   2) 스크롤 기능은 유지: 저장소 / 결과(상위법+자치법규)
+   3) 스크롤바 UI(thumb/track) 표시는 전부 숨김(디자인 깔끔)
+   4) 결과 상단 선택값(배지 bar)은 고정, 그 아래(상위법부터)만 스크롤
+   5) 페이지(전체) 스크롤은 없고(overflow:hidden), 내부 영역만 스크롤
 */
 
 :root{
@@ -28,17 +26,10 @@
 
   --radius:18px;
   --shadow: 0 18px 50px rgba(0,0,0,.55);
-
-  /* ✅ 스크롤바 다크톤 */
-  --sb-track: rgba(255,255,255,.06);
-  --sb-thumb: rgba(255,255,255,.18);
-  --sb-thumb-hover: rgba(255,255,255,.26);
 }
 
 *{box-sizing:border-box}
 html,body{height:100%}
-
-/* ✅ 브라우저 기본 폼/스크롤 컬러스킴을 다크로 우선 */
 html{ color-scheme: dark; }
 
 body{
@@ -50,7 +41,7 @@ body{
   color:var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", Segoe UI, Roboto, Arial, sans-serif;
 
-  /* ✅ 페이지 전체 스크롤 금지 -> 결과/리스트 내부만 스크롤 */
+  /* ✅ 페이지 전체 스크롤 금지 -> 내부만 스크롤 */
   overflow:hidden;
 }
 
@@ -87,7 +78,7 @@ body{
   padding: 16px 18px;
 }
 
-/* 왼쪽은 스크롤 없이 고정(리스트만 스크롤) */
+/* 왼쪽: 내부만 스크롤(저장소 리스트만) */
 .leftColumn{
   height:100%;
   overflow:hidden;
@@ -97,11 +88,11 @@ body{
   min-height:0; /* ✅ 내부 flex 스크롤 필수 */
 }
 
-/* 오른쪽(결과)만 스크롤(리스트만 스크롤) */
+/* 오른쪽: 결과 내부만 스크롤 */
 .rightColumn{
   height:100%;
   overflow:hidden;
-  min-height:0; /* ✅ 내부 flex 스크롤 필수 */
+  min-height:0;
 }
 
 /* ============= Card / Panel ============= */
@@ -124,17 +115,13 @@ body{
 /* ✅ 결과 영역: 상단바 고정 + 아래만 스크롤 */
 .bigResult{
   height:100%;
-
-  /* 기존: overflow:auto 였는데, ctxBar 고정하려면 컨테이너는 hidden */
   overflow:hidden;
-
-  /* flex로 상단/리스트 분리 */
   display:flex;
   flex-direction:column;
   min-height:0;
 }
 
-/* ✅ ctxBar(선택값 표시) 고정(sticky 느낌) */
+/* ✅ ctxBar(선택값 표시) 고정 */
 .ctxBar{
   flex: 0 0 auto;
   display:flex;
@@ -146,7 +133,6 @@ body{
   border:1px solid var(--line);
   background: rgba(0,0,0,.22);
 
-  /* 스크롤 영역 위에 떠있게 */
   position: sticky;
   top: 0;
   z-index: 5;
@@ -159,49 +145,22 @@ body{
   white-space: nowrap;
 }
 
-/* ✅ 결과 리스트(상위법부터)가 스크롤 되는 영역
-   - main.js/HTML에서 upperList/ordinList가 bigResult 안에 있으므로
-   - 결과 패널(리스트)을 감싸는 래퍼가 없다면, 아래 셀렉터로 스크롤을 부여
-*/
-#upperList, #ordinList{
-  /* 두 리스트가 연속으로 쌓일 때 스크롤이 하나로 필요하므로
-     부모(.bigResult)에서 스크롤을 만들고 싶지만,
-     ctxBar 고정 때문에 .bigResult는 hidden.
-     따라서 "리스트들을 감싸는 컨테이너"가 있으면 거기에 적용하는 게 정석인데,
-     현재 구조를 가정해 최소 변경으로 동작하게:
-     - upperList가 스크롤 컨테이너 역할
-     - ordinList는 아래에 붙음(upperList 안에 같이 있지 않으면 각각 스크롤될 수 있음)
-     => 만약 각각 따로 스크롤되는 게 싫으면, HTML에 결과리스트 래퍼 1개 추가가 필요.
-  */
-}
-
-/* ✅ 가장 안정적인 방식: bigResult 안에서 리스트들을 감싸는 요소가 없을 경우 대비
-   - bigResult의 "두번째 자식"부터를 스크롤 영역으로 취급
-   - (ctxBar 다음 요소가 스크롤 영역이 되도록)
-*/
+/* ✅ ctxBar 아래 영역만 스크롤(기능 유지) */
 .bigResult > :not(.ctxBar){
   flex: 1 1 auto;
   min-height:0;
   overflow:auto;
   padding-bottom: 22px;
-
-  scrollbar-width: thin;
-  scrollbar-color: var(--sb-thumb) var(--sb-track);
 }
 
-/* ✅ 결과창 스크롤바(크롬/엣지) */
-.bigResult > :not(.ctxBar)::-webkit-scrollbar{ width: 10px; }
-.bigResult > :not(.ctxBar)::-webkit-scrollbar-track{
-  background: var(--sb-track);
-  border-radius: 999px;
+/* ✅ 스크롤바 UI 숨김(기능은 유지) */
+.bigResult > :not(.ctxBar){
+  -ms-overflow-style: none;     /* IE/Edge legacy */
+  scrollbar-width: none;        /* Firefox */
 }
-.bigResult > :not(.ctxBar)::-webkit-scrollbar-thumb{
-  background: var(--sb-thumb);
-  border-radius: 999px;
-  border: 2px solid rgba(0,0,0,.35);
-}
-.bigResult > :not(.ctxBar)::-webkit-scrollbar-thumb:hover{
-  background: var(--sb-thumb-hover);
+.bigResult > :not(.ctxBar)::-webkit-scrollbar{
+  width: 0;
+  height: 0;
 }
 
 /* 패널 */
@@ -254,7 +213,6 @@ body{
   box-shadow: 0 0 0 4px rgba(43,108,255,.20);
 }
 
-/* ✅ 드롭다운 옵션 리스트(가능한 범위 내) 다크 */
 select option{
   background-color: #070b14;
   color: var(--text);
@@ -281,17 +239,6 @@ select option{
   font-size:13px;
 }
 .row.toggles input{transform: translateY(1px);}
-
-/* ✅ 저장소 검색 + 지우기 버튼 "한 줄" 고정 */
-.card .row.split .input{
-  flex: 1 1 auto;
-  min-width: 0;
-}
-.card .row.split .btn{
-  flex: 0 0 auto;
-  white-space: nowrap;
-  min-width: 72px;
-}
 
 /* ============= Buttons ============= */
 
@@ -383,9 +330,7 @@ select option{
 
 /* ============= Library ============= */
 
-/* ✅ 저장소 카드(왼쪽)에서 "리스트만" 스크롤 되도록:
-   - leftColumn의 마지막 카드가 저장소라고 가정(현재 UI 구조 기준)
-*/
+/* ✅ 저장소 카드가 남은 영역을 차지하고 내부만 스크롤 */
 .leftColumn .card:last-child{
   flex: 1 1 auto;
   min-height:0;
@@ -393,28 +338,35 @@ select option{
   flex-direction:column;
 }
 
-/* ✅ 저장소 리스트만 스크롤 */
+/* ✅ (중요) 저장소에서 “검색창 + 지우기 버튼” 제거 + 공백 없이 */
+#inpFilter,
+#btnClearFilter{
+  display:none !important;
+}
+
+/* inpFilter/btnClearFilter을 감싸는 row.split 자체도 숨김(공백 제거) */
+.leftColumn .card:last-child .row.split{
+  display:none !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+
+/* ✅ 저장소 리스트만 스크롤(기능 유지) */
 #libList{
   flex: 1 1 auto;
   min-height:0;
   overflow:auto;
   margin-top: 12px;
+}
 
-  scrollbar-width: thin;
-  scrollbar-color: var(--sb-thumb) var(--sb-track);
+/* ✅ 저장소 스크롤바 UI 숨김(기능 유지) */
+#libList{
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
-#libList::-webkit-scrollbar{ width: 10px; }
-#libList::-webkit-scrollbar-track{
-  background: var(--sb-track);
-  border-radius: 999px;
-}
-#libList::-webkit-scrollbar-thumb{
-  background: var(--sb-thumb);
-  border-radius: 999px;
-  border: 2px solid rgba(0,0,0,.35);
-}
-#libList::-webkit-scrollbar-thumb:hover{
-  background: var(--sb-thumb-hover);
+#libList::-webkit-scrollbar{
+  width: 0;
+  height: 0;
 }
 
 .stats{
