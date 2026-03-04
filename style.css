@@ -1,21 +1,13 @@
 /* style.css (FULL REPLACE)
    archi-law-cl-03 dark UI
 
-   ✅ 정책(고정)
-   - A/B 토글/모드개념 없음 (B 레이아웃 고정)
-   - 큰 화면(>=1101px): 상단 선택바 + 아래 좌(저장소)/우(결과)
-   - 작은 화면(<1101px): 세로 스택
-   - 페이지 스크롤 금지(내부 스크롤만) + 스크롤바 숨김
-
-   ✅ 최종 수정 반영(이번 요청)
-   1) (a1 -> a2) 좌측 stats(소스/토픽태그) 상단 여백 줄여 정렬감 위로
-   2) (b) 저장소 카드 태그줄 1줄 가로 왼쪽 정렬(줄바꿈 금지)
-   3) (c) 저장소 카드 버튼줄 1줄 가로 왼쪽 정렬(줄바꿈 금지)
+   ✅ 이번 수정(정확 반영)
+   - (a1→a2) 좌측 stats 블록 살짝 위로
+   - (b) 저장소 태그(.tags) 1줄 + 가로스크롤
+   - (c) 저장소 버튼 1줄 + 가로스크롤 (기존 .libBtnRow 3줄 구조를 CSS로 평탄화)
+   - 제목이 세로로 쪼개지는 현상 방지(최우선)
 */
 
-/* =========================
-   Tokens
-========================= */
 :root{
   --bg:#05070c;
   --card:#0b1020;
@@ -42,7 +34,6 @@ body{
     var(--bg);
   color:var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", Segoe UI, Roboto, Arial, sans-serif;
-
   overflow:hidden;
 }
 
@@ -59,7 +50,6 @@ body{
   background: rgba(0,0,0,.35);
   backdrop-filter: blur(10px);
 }
-
 .brand{display:flex; align-items:center; gap:12px;}
 .logo{
   width:42px;height:42px;border-radius:14px;
@@ -69,15 +59,10 @@ body{
   font-weight:800;
 }
 .brandText .name{font-weight:800; letter-spacing:.2px;}
-
-.topbarRight{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
+.topbarRight{display:flex; align-items:center; gap:12px;}
 
 /* =========================
-   Layout (B 고정)
+   Layout
 ========================= */
 .layout{
   height: calc(100vh - 68px);
@@ -90,7 +75,6 @@ body{
   gap: 16px;
   padding: 16px 18px;
 }
-
 .topFilterBar{ grid-area: top; }
 .leftColumn{ grid-area: left; }
 .rightColumn{ grid-area: right; }
@@ -98,17 +82,13 @@ body{
 /* =========================
    Top Filter Bar
 ========================= */
-.topFilterBar{
-  padding: 8px 10px;
-}
-
+.topFilterBar{ padding: 8px 10px; }
 .topFilterInner{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap: 10px;
 }
-
 .topFilterLeft{
   display:flex;
   flex-direction:column;
@@ -116,7 +96,6 @@ body{
   gap: 0;
   min-width:0;
 }
-
 .topFilterTitle{ display:none; }
 
 .topFilterFields{
@@ -126,17 +105,13 @@ body{
   flex-wrap:nowrap;
   min-width:0;
 }
-
-.topFilterFields .field{
-  min-width: 190px;
-}
+.topFilterFields .field{ min-width: 190px; }
 
 .fieldLabel{
   font-size:12px;
   color: rgba(233,238,252,.85);
   margin-bottom: 6px;
 }
-
 #selTopic{ min-width: 0; width: 100%; }
 
 .topFilterToggles{
@@ -149,16 +124,13 @@ body{
   font-size:13px;
   margin-left: 6px;
 }
-
 .topFilterToggles label{
   display:inline-flex;
   align-items:center;
   gap: 8px;
   line-height: 1;
 }
-.topFilterToggles input[type="checkbox"]{
-  transform: translateY(-0.5px);
-}
+.topFilterToggles input[type="checkbox"]{ transform: translateY(-0.5px); }
 
 .topFilterRight{
   display:flex;
@@ -166,7 +138,6 @@ body{
   justify-content:flex-end;
   flex: 0 0 auto;
 }
-
 #btnBuild{
   width:auto;
   min-width: 150px;
@@ -184,7 +155,6 @@ body{
   gap:16px;
   min-height:0;
 }
-
 .rightColumn{
   height:100%;
   overflow:hidden;
@@ -204,9 +174,7 @@ body{
 .card.compact{padding:14px}
 
 .leftColumn .card > h2,
-.bigResult > h2{
-  display:none !important;
-}
+.bigResult > h2{ display:none !important; }
 
 /* =========================
    Result
@@ -219,7 +187,6 @@ body{
   min-height:0;
   padding-top: 8px;
 }
-
 .ctxBar{
   flex: 0 0 auto;
   display:flex;
@@ -236,11 +203,7 @@ body{
   z-index: 5;
   backdrop-filter: blur(8px);
 }
-
-#btnCopyQuery{
-  margin-left:auto;
-  white-space: nowrap;
-}
+#btnCopyQuery{ margin-left:auto; white-space: nowrap; }
 
 .bigResult > :not(.ctxBar){
   flex: 1 1 auto;
@@ -251,10 +214,7 @@ body{
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-.bigResult > :not(.ctxBar)::-webkit-scrollbar{
-  width: 0;
-  height: 0;
-}
+.bigResult > :not(.ctxBar)::-webkit-scrollbar{ width: 0; height: 0; }
 
 .panel{
   margin-top: 8px;
@@ -263,7 +223,6 @@ body{
   border:1px solid var(--line);
   background: rgba(0,0,0,.22);
 }
-
 .panel h3{
   margin:0 0 10px;
   font-size:15px;
@@ -285,19 +244,12 @@ body{
   color-scheme: dark;
   -webkit-appearance: none;
   appearance: none;
-
-  overflow: hidden;
 }
-
 .select:focus, .input:focus{
   border-color: rgba(43,108,255,.55);
   box-shadow: 0 0 0 4px rgba(43,108,255,.20);
 }
-
-select option{
-  background-color: #070b14;
-  color: var(--text);
-}
+select option{ background-color: #070b14; color: var(--text); }
 
 /* =========================
    Buttons
@@ -321,7 +273,6 @@ select option{
   background: rgba(43,108,255,.30);
   border-color: rgba(43,108,255,.45);
 }
-
 .btn.ghost{ background: transparent; }
 
 .btn.danger{
@@ -334,7 +285,7 @@ select option{
 }
 
 /* =========================
-   Badges
+   Badges / Pills
 ========================= */
 .badge{
   display:inline-flex;
@@ -348,11 +299,23 @@ select option{
 }
 .badge.soft{background: rgba(43,108,255,.12); border-color: rgba(43,108,255,.18);}
 
+.metaPill{
+  display:inline-flex;
+  align-items:center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  font-size:12px;
+  color: rgba(233,238,252,.92);
+}
+.metaPill.good{background: rgba(0,255,170,.10); border-color: rgba(0,255,170,.18);}
+.metaPill.warn{background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.20);}
+
 /* =========================
-   Items
+   Items (result cards)
 ========================= */
 .list{display:flex; flex-direction:column; gap:12px;}
-
 .item{
   padding: 14px;
   border-radius: 16px;
@@ -368,20 +331,6 @@ select option{
   gap:8px;
   flex-wrap:wrap;
 }
-
-.metaPill{
-  display:inline-flex;
-  align-items:center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  font-size:12px;
-  color: rgba(233,238,252,.92);
-}
-.metaPill.good{background: rgba(0,255,170,.10); border-color: rgba(0,255,170,.18);}
-.metaPill.warn{background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.20);}
-
 .itemActions{
   margin-top: 12px;
   display:flex;
@@ -390,7 +339,7 @@ select option{
 }
 
 /* =========================
-   Library (좌측)
+   Library (left)
 ========================= */
 .leftColumn .card{
   flex: 1 1 auto;
@@ -400,54 +349,34 @@ select option{
 }
 
 #inpFilter, #btnClearFilter,
-.leftColumn .row.split{
-  display:none !important;
-  margin:0 !important;
-  padding:0 !important;
-}
+.leftColumn .row.split{ display:none !important; }
 
-/* ✅ stats */
+/* ✅ stats (a1→a2) 살짝 위로 */
 .stats{
   display:grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-
-  /* ✅ (a1->a2) 위로 올리기: 상단 여백 더 줄임 */
   margin-top: -6px;
 }
-
 .stat{
   padding: 10px 12px;
   border-radius: 16px;
   border:1px solid var(--line);
   background: rgba(0,0,0,.22);
 }
-.stat .k{
-  color: rgba(167,176,199,.90);
-  font-size:12px;
-  line-height: 1.1;
-}
-.stat .v{
-  font-size:20px;
-  font-weight:900;
-  margin-top: 6px;
-  line-height: 1.05;
-}
+.stat .k{ color: rgba(167,176,199,.90); font-size:12px; line-height: 1.1; }
+.stat .v{ font-size:20px; font-weight:900; margin-top: 6px; line-height: 1.05; }
 
-/* 저장소 리스트만 스크롤 + 스크롤바 숨김 */
+/* 저장소 리스트 스크롤 */
 #libList{
   flex: 1 1 auto;
   min-height:0;
   overflow:auto;
   margin-top: 12px;
-
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-#libList::-webkit-scrollbar{
-  width: 0;
-  height: 0;
-}
+#libList::-webkit-scrollbar{ width: 0; height: 0; }
 
 /* ✅ 저장소 카드 */
 .libItem{
@@ -457,53 +386,56 @@ select option{
   background: rgba(0,0,0,.18);
 }
 
-.libRow{
-  display:flex;
-  gap:12px;
-  align-items:flex-start;
-  justify-content:space-between;
-}
-
-.libLeft{
-  flex: 1 1 auto;
-  min-width:0;
-}
-
-.libRight{
-  flex: 0 0 auto;
-}
-
+/* ✅ 제목 세로쪼개짐 방지 핵심 */
 .libItem .title{
   font-weight:900;
   letter-spacing:.1px;
+  word-break: keep-all;      /* 한글 글자 단위 쪼개짐 방지 */
+  overflow-wrap: normal;
+  white-space: normal;
 }
-
 .libItem .sub{
   margin-top:6px;
   color: rgba(167,176,199,.92);
   font-size:12px;
 }
 
-/* ✅ (b) 태그줄 1줄 고정 */
-.libTagsLine{
+/* 좌/우 레이아웃 — 좌측 최소폭 보장(세로쪼개짐 예방) */
+.libRow{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  justify-content:space-between;
+}
+.libLeft{
+  flex: 1 1 auto;
+  min-width: 260px;          /* ✅ 너무 좁아지지 않게 하드가드 */
+}
+.libRight{
+  flex: 0 0 auto;
+  max-width: 100%;
+}
+
+/* (b) 태그: 1줄 + 가로스크롤(숨김) + 왼쪽정렬 */
+.libItem .tags{
   margin-top:10px;
   display:flex;
   align-items:center;
   justify-content:flex-start;
   gap:8px;
 
-  flex-wrap:nowrap;        /* 줄바꿈 금지 */
-  white-space:nowrap;      /* 텍스트도 한 줄 */
-  overflow:hidden;         /* 넘치면 숨김 */
-}
+  flex-wrap:nowrap;
+  white-space:nowrap;
+  overflow-x:auto;
+  overflow-y:hidden;
 
-/* 태그가 넘치면 마지막이 ...처럼 보이도록(대부분 pill이라 완전한 ...는 어렵지만) */
-.libTagsLine .metaPill{
-  flex: 0 0 auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
+.libItem .tags::-webkit-scrollbar{ width:0; height:0; }
 
-/* ✅ 검색어 줄(길면 ... 처리) */
-.libQueryLine{
+/* 검색어 줄은 한줄 ... */
+.libItem .hint{
   margin-top:10px;
   word-break:normal;
   white-space:nowrap;
@@ -511,19 +443,31 @@ select option{
   text-overflow:ellipsis;
 }
 
-/* ✅ (c) 버튼줄 1줄 고정 */
-.libActionsLine{
+/* (c) 버튼: 1줄로 “평탄화”
+   - main.js 구조: .libActions 안에 .libBtnRow(3줄)
+   - CSS로 .libBtnRow를 contents로 만들어 한줄처럼 보이게 함
+*/
+.libActions{
   display:flex;
+  flex-direction:row;
   align-items:center;
   justify-content:flex-start;
   gap:10px;
 
-  flex-wrap:nowrap;     /* 줄바꿈 금지 */
+  flex-wrap:nowrap;
   white-space:nowrap;
-  overflow:hidden;      /* 가로가 부족하면 숨김 */
+  overflow-x:auto;
+  overflow-y:hidden;
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.libActions::-webkit-scrollbar{ width:0; height:0; }
+
+.libBtnRow{
+  display: contents;   /* ✅ 3줄을 DOM만 남기고 레이아웃은 1줄로 */
 }
 
-/* 버튼은 조금 더 컴팩트하게 */
 .leftColumn .libItem .btn{
   padding: 9px 12px;
   border-radius: 14px;
@@ -542,16 +486,8 @@ select option{
     grid-template-areas: none;
   }
 
-  .topFilterInner{
-    flex-direction:column;
-    align-items:stretch;
-  }
-
-  .topFilterLeft{
-    flex-direction:column;
-    align-items:stretch;
-    gap: 8px;
-  }
+  .topFilterInner{ flex-direction:column; align-items:stretch; }
+  .topFilterLeft{ flex-direction:column; align-items:stretch; gap: 8px; }
 
   .topFilterTitle{
     display:block;
@@ -561,25 +497,11 @@ select option{
     line-height:1;
   }
 
-  .topFilterFields{
-    display:flex;
-    flex-wrap:wrap;
-    align-items:flex-end;
-  }
+  .topFilterFields{ flex-wrap:wrap; align-items:flex-end; }
+  .topFilterToggles{ flex-wrap:wrap; margin-left: 0; }
+  .topFilterRight{ justify-content:flex-start; }
 
-  .topFilterToggles{
-    flex-wrap:wrap;
-    margin-left: 0;
-  }
-
-  .topFilterRight{
-    justify-content:flex-start;
-  }
-
-  #btnBuild{
-    width:100%;
-    min-width:0;
-  }
+  #btnBuild{ width:100%; min-width:0; }
 
   .leftColumn, .rightColumn{overflow: visible;}
   .bigResult{height:auto; overflow:visible; display:block;}
@@ -587,21 +509,19 @@ select option{
   #libList{ overflow:visible; }
 
   .libRow{ flex-direction:column; }
-  .libActionsLine{
-    flex-wrap:wrap;       /* 모바일은 줄바꿈 허용 */
-    overflow:visible;
-  }
-  .libTagsLine{
-    flex-wrap:wrap;       /* 모바일은 줄바꿈 허용 */
-    overflow:visible;
-  }
+  .libLeft{ min-width: 0; }
+
+  /* 모바일은 줄바꿈 허용(보이는 게 우선) */
+  .libItem .tags{ flex-wrap:wrap; white-space:normal; overflow:visible; }
+  .libActions{ flex-wrap:wrap; white-space:normal; overflow:visible; }
+  .libBtnRow{ display:flex; gap:10px; flex-wrap:wrap; }
 }
 
 /* =========================
-   ✅ CSS 로딩 확인용 스탬프 (진단용)
+   CSS 로딩 확인용 스탬프
 ========================= */
 body::after{
-  content: "CSS v2026-03-04.2";
+  content: "CSS v2026-03-04.3";
   position: fixed;
   right: 12px;
   bottom: 10px;
