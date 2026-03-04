@@ -20,54 +20,56 @@
 
 <main class="layout">
 
-  <!-- 🔵 LEFT COLUMN -->
-  <div class="leftColumn">
+  <!-- ✅ TOP FILTER BAR (전체화면에서만 상단 가로바처럼 보이도록 CSS에서 배치) -->
+  <section class="card compact topFilterBar" id="selectBar">
+    <div class="topFilterInner">
+      <!-- 좌측: 선택 요소들 -->
+      <div class="topFilterLeft">
+        <div class="topFilterTitle">선택</div>
 
-    <!-- 선택 -->
-    <section class="card compact">
-      <h2>선택</h2>
+        <div class="topFilterFields">
+          <div class="field">
+            <div class="fieldLabel">시도 *</div>
+            <select id="selSido" class="select"></select>
+          </div>
 
-      <div class="row3">
-        <div class="field">
-          <div class="fieldLabel">시도 *</div>
-          <select id="selSido" class="select"></select>
+          <div class="field">
+            <div class="fieldLabel">시군구 *</div>
+            <select id="selSigungu" class="select">
+              <option value="">(시군구 선택)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <div class="fieldLabel">건축물 용도</div>
+            <select id="selUse" class="select"></select>
+          </div>
+
+          <div class="field">
+            <div class="fieldLabel">토픽 *</div>
+            <select id="selTopic" class="select"></select>
+          </div>
         </div>
 
-        <div class="field">
-          <div class="fieldLabel">시군구 *</div>
-          <select id="selSigungu" class="select">
-            <option value="">(시군구 선택)</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <div class="fieldLabel">건축물 용도</div>
-          <select id="selUse" class="select"></select>
+        <div class="topFilterToggles">
+          <label><input id="chkIncludeAct" type="checkbox" checked /> 상위법 포함</label>
+          <label><input id="chkIncludeOrdin" type="checkbox" checked /> 자치법규 포함</label>
         </div>
       </div>
 
-      <div class="row">
-        <div class="field">
-          <div class="fieldLabel">토픽 *</div>
-          <select id="selTopic" class="select"></select>
-        </div>
-      </div>
-
-      <div class="row split">
+      <!-- 우측: 결과 생성 버튼 -->
+      <div class="topFilterRight">
         <button id="btnBuild" class="btn primary">결과 생성</button>
-        <!-- ✅ 자동찾기 버튼 제거 -->
       </div>
+    </div>
+  </section>
 
-      <div class="row toggles">
-        <label><input id="chkIncludeAct" type="checkbox" checked /> 상위법 포함</label>
-        <label><input id="chkIncludeOrdin" type="checkbox" checked /> 자치법규 포함</label>
-      </div>
-    </section>
-
-    <!-- 저장소 -->
+  <!-- 🔵 LEFT COLUMN : 저장소만 (선택은 상단 바로 이동했으니 저장소가 위로 당겨짐) -->
+  <div class="leftColumn">
     <section class="card">
       <h2>저장소</h2>
 
+      <!-- (현재는 그대로 둠: 필요하면 다음 단계에서 검색/지우기 제거 가능) -->
       <div class="row split">
         <input id="inpFilter" class="input" placeholder="검색…" />
         <button id="btnClearFilter" class="btn ghost">지우기</button>
@@ -86,12 +88,10 @@
 
       <div id="libList" class="libList"></div>
     </section>
-
   </div>
 
   <!-- 🔴 RIGHT COLUMN -->
   <div class="rightColumn">
-
     <section class="card bigResult">
       <h2>결과</h2>
 
@@ -112,10 +112,7 @@
         <h3>자치법규(해당 지자체)</h3>
         <div id="ordinList" class="list"></div>
       </div>
-
-      <!-- ✅ 자동찾기 후보 패널 제거 -->
     </section>
-
   </div>
 
 </main>

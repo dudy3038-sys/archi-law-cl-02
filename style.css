@@ -2,11 +2,13 @@
    archi-law-cl-03 dark UI
 
    ✅ 최종 반영(요청 확정본)
-   1) 저장소 영역: “검색창 + 지우기 버튼(필터 UI)” 화면에서 제거 + 공백 없이 위로 당김
-   2) 스크롤 기능은 유지: 저장소 / 결과(상위법+자치법규)
-   3) 스크롤바 UI(thumb/track) 표시는 전부 숨김(디자인 깔끔)
-   4) 결과 상단 선택값(배지 bar)은 고정, 그 아래(상위법부터)만 스크롤
+   1) (전체화면) 선택 영역을 상단 가로바로 배치(좌: 필드/토글, 우: 결과생성)
+   2) 저장소는 위로 당겨 좌/우 정렬 높이 맞춤
+   3) 스크롤 기능은 유지(저장소/결과) + 스크롤바 UI 숨김
+   4) 결과 상단 선택값(ctxBar)은 고정, 그 아래만 스크롤
    5) 페이지(전체) 스크롤은 없고(overflow:hidden), 내부 영역만 스크롤
+   6) 저장소 필터 UI 제거 + 공백 없이
+   7) (요청) 시군구/용도 select "닫힌 상태" 스크롤 UI/기능 제거
 */
 
 :root{
@@ -70,26 +72,110 @@ body{
 
 /* ============= Layout ============= */
 
+/* ✅ (전체화면) 2행 그리드:
+   1행: 선택바(span 2)
+   2행: 좌(저장소) + 우(결과)
+*/
 .layout{
   height: calc(100vh - 68px);
   display:grid;
   grid-template-columns: 420px 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "top top"
+    "left right";
   gap: 16px;
   padding: 16px 18px;
 }
 
-/* 왼쪽: 내부만 스크롤(저장소 리스트만) */
+/* ============= Top Filter Bar (NEW) ============= */
+
+.topFilterBar{
+  grid-area: top;
+  padding: 14px 16px;
+}
+
+/* 상단바 내부 정렬 */
+.topFilterInner{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap: 14px;
+}
+
+/* 좌측(필드/토글) */
+.topFilterLeft{
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+  min-width:0;
+}
+
+/* "선택" 타이틀 */
+.topFilterTitle{
+  font-size:16px;
+  font-weight:800;
+  margin:0;
+  line-height:1;
+}
+
+/* 필드들 가로 배열 */
+.topFilterFields{
+  display:flex;
+  align-items:flex-end;
+  gap: 12px;
+  flex-wrap:nowrap;
+}
+
+/* 각 field는 너무 좁아지지 않게 */
+.topFilterFields .field{
+  min-width: 170px;
+}
+
+/* 토픽은 조금 넓게 */
+#selTopic{
+  min-width: 260px;
+}
+
+/* 토글: 왼쪽 정렬로 한 줄 */
+.topFilterToggles{
+  display:flex;
+  align-items:center;
+  gap: 16px;
+  flex-wrap:wrap;
+  color: rgba(233,238,252,.85);
+  font-size:13px;
+}
+
+/* 우측(결과 생성) */
+.topFilterRight{
+  display:flex;
+  align-items:flex-end;
+  justify-content:flex-end;
+  flex: 0 0 auto;
+}
+
+/* 결과 생성은 오른쪽 정렬 */
+#btnBuild{
+  width:auto;
+  min-width: 140px;
+}
+
+/* ============= Left / Right Columns ============= */
+
 .leftColumn{
+  grid-area: left;
   height:100%;
   overflow:hidden;
   display:flex;
   flex-direction:column;
   gap:16px;
-  min-height:0; /* ✅ 내부 flex 스크롤 필수 */
+  min-height:0;
 }
 
 /* 오른쪽: 결과 내부만 스크롤 */
 .rightColumn{
+  grid-area: right;
   height:100%;
   overflow:hidden;
   min-height:0;
@@ -151,12 +237,10 @@ body{
   min-height:0;
   overflow:auto;
   padding-bottom: 22px;
-}
 
-/* ✅ 스크롤바 UI 숨김(기능은 유지) */
-.bigResult > :not(.ctxBar){
-  -ms-overflow-style: none;     /* IE/Edge legacy */
-  scrollbar-width: none;        /* Firefox */
+  /* ✅ 스크롤바 UI 숨김(기능 유지) */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 .bigResult > :not(.ctxBar)::-webkit-scrollbar{
   width: 0;
@@ -180,20 +264,12 @@ body{
 
 /* ============= Form ============= */
 
-.row{margin-top: 12px;}
-.row3{
-  display:grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-}
-
 .fieldLabel{
   font-size:12px;
   color: rgba(233,238,252,.85);
   margin-bottom: 8px;
 }
 
-/* ✅ select / input 다크 강제 */
 .select, .input{
   width:100%;
   padding: 12px 12px;
@@ -206,6 +282,9 @@ body{
   color-scheme: dark;
   -webkit-appearance: none;
   appearance: none;
+
+  /* ✅ (요청) 닫힌 상태에서 내부 스크롤 제거 */
+  overflow: hidden;
 }
 
 .select:focus, .input:focus{
@@ -217,28 +296,6 @@ select option{
   background-color: #070b14;
   color: var(--text);
 }
-
-/* 버튼 줄 */
-.row.split{
-  display:flex;
-  gap:10px;
-  margin-top: 14px;
-  align-items: stretch;
-}
-
-/* ✅ 결과 생성 버튼 폭 100% 유지 */
-#btnBuild{ width:100%; }
-
-/* 토글 */
-.row.toggles{
-  margin-top: 12px;
-  display:flex;
-  gap:16px;
-  flex-wrap:wrap;
-  color: rgba(233,238,252,.85);
-  font-size:13px;
-}
-.row.toggles input{transform: translateY(1px);}
 
 /* ============= Buttons ============= */
 
@@ -330,7 +387,7 @@ select option{
 
 /* ============= Library ============= */
 
-/* ✅ 저장소 카드가 남은 영역을 차지하고 내부만 스크롤 */
+/* 저장소 카드가 남은 영역을 차지하고 내부만 스크롤 */
 .leftColumn .card:last-child{
   flex: 1 1 auto;
   min-height:0;
@@ -338,13 +395,11 @@ select option{
   flex-direction:column;
 }
 
-/* ✅ (중요) 저장소에서 “검색창 + 지우기 버튼” 제거 + 공백 없이 */
+/* ✅ 저장소에서 “검색창 + 지우기 버튼” 제거 + 공백 없이 */
 #inpFilter,
 #btnClearFilter{
   display:none !important;
 }
-
-/* inpFilter/btnClearFilter을 감싸는 row.split 자체도 숨김(공백 제거) */
 .leftColumn .card:last-child .row.split{
   display:none !important;
   margin:0 !important;
@@ -357,10 +412,8 @@ select option{
   min-height:0;
   overflow:auto;
   margin-top: 12px;
-}
 
-/* ✅ 저장소 스크롤바 UI 숨김(기능 유지) */
-#libList{
+  /* ✅ 스크롤바 UI 숨김(기능 유지) */
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
@@ -369,6 +422,7 @@ select option{
   height: 0;
 }
 
+/* stats */
 .stats{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -396,14 +450,20 @@ select option{
 .libItem .tags{margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;}
 .libItem .top{display:flex; gap:10px; justify-content:space-between; align-items:flex-start;}
 
-/* ============= Responsive ============= */
+/* ============= Responsive (창모드/작은 화면 유지) ============= */
 
 @media (max-width: 1100px){
   body{overflow:auto;}
   .layout{
     height:auto;
     grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas: none;
   }
+
+  /* 작은 화면에서는 상단바도 그냥 카드처럼 흐르게 */
+  .topFilterBar{ grid-area: auto; }
+
   .leftColumn, .rightColumn{overflow: visible;}
   .bigResult{height:auto; overflow:visible; display:block;}
   .bigResult > :not(.ctxBar){ overflow:visible; }
