@@ -7,8 +7,10 @@
    - 저장소/결과 스크롤 기능 유지 + 스크롤바 UI 숨김
    - 결과 ctxBar 고정 + 그 아래만 스크롤
    - 저장소 필터 UI 제거 + 공백 없이
-   - (요청) 시군구/용도 select “닫힌 상태” 스크롤 UI/기능 제거 → (사실상 닫힌 상태 스크롤은 브라우저 버그성)
-     → overflow hidden + 스핀/스틱키 방지 기본값으로 처리
+   - (요청) 시군구/용도 select “닫힌 상태” 스크롤 UI/기능 제거 → overflow hidden
+   - (추가요청)
+     1) A모드+전체화면: 선택창 배열을 2번째 이미지처럼 (3열 + 토픽 1줄 전체)
+     2) B모드+전체화면: 선택바 높이(Z→Y) 줄이기 + 토픽 너비를 다른 select와 동일하게
 */
 
 /* =========================
@@ -112,9 +114,7 @@ body{
   cursor:pointer;
 }
 
-.abToggle .abBtn:focus{
-  outline:none;
-}
+.abToggle .abBtn:focus{ outline:none; }
 
 .abToggle .abThumb{
   position:absolute;
@@ -208,7 +208,7 @@ body.modeB .abToggle .abThumb{
   line-height:1;
 }
 
-/* 필드들: 기본(A)에서도 가로지만, 좁아지면 자연스럽게 줄바꿈 */
+/* 필드들 기본 */
 .topFilterFields{
   display:flex;
   align-items:flex-end;
@@ -221,7 +221,7 @@ body.modeB .abToggle .abThumb{
   min-width: 170px;
 }
 
-/* 토픽은 조금 넓게 */
+/* 기본(A)에서는 토픽 넓게(기존) */
 #selTopic{
   min-width: 260px;
 }
@@ -248,6 +248,95 @@ body.modeB .abToggle .abThumb{
 #btnBuild{
   width:auto;
   min-width: 140px;
+}
+
+/* =========================================================
+   ✅ 요청 1) A모드 + 전체화면(큰 화면) 선택창 배열(2번째 이미지처럼)
+   - 1행: 시도/시군구/용도 (3열)
+   - 2행: 토픽(전체 span)
+========================================================= */
+@media (min-width: 1101px){
+  body:not(.modeB) .topFilterInner{
+    align-items:flex-end;
+  }
+
+  body:not(.modeB) .topFilterFields{
+    display:grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    align-items:end;
+  }
+
+  /* 4번째 필드(토픽)가 전체 폭을 쓰도록 */
+  body:not(.modeB) .topFilterFields .field:nth-child(4){
+    grid-column: 1 / -1;
+  }
+
+  /* 그리드에서 min-width 때문에 깨지지 않게 */
+  body:not(.modeB) .topFilterFields .field{
+    min-width: 0;
+  }
+
+  body:not(.modeB) #selTopic{
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   ✅ 요청 2) B모드 + 전체화면: 상단바 높이(Z→Y) 줄이기 + 토픽 너비 동일
+========================================================= */
+@media (min-width: 1101px){
+  body.modeB .topFilterBar{
+    padding: 10px 12px; /* 높이 축소 */
+  }
+
+  body.modeB .topFilterInner{
+    align-items:center; /* 세로 여백 줄이기 */
+    gap: 12px;
+  }
+
+  /* B에서는 타이틀로 인해 높이가 늘어나는 느낌이 있어 숨김 */
+  body.modeB .topFilterTitle{
+    display:none;
+  }
+
+  body.modeB .topFilterLeft{
+    flex-direction:row;
+    align-items:center;
+    gap: 12px;
+  }
+
+  /* B에서는 한 줄 유지(전체화면 전제) */
+  body.modeB .topFilterFields{
+    flex-wrap:nowrap;
+    align-items:center;
+    gap: 10px;
+  }
+
+  /* B에서는 모든 필드 폭 동일 컨셉 */
+  body.modeB .topFilterFields .field{
+    min-width: 190px;
+  }
+
+  /* ✅ 토픽도 동일 폭 */
+  body.modeB #selTopic{
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* B에서는 체크박스를 필드 라인에 최대한 붙여서 높이 절감 */
+  body.modeB .topFilterToggles{
+    margin-top: 0;
+    gap: 12px;
+    flex-wrap:nowrap;
+    white-space:nowrap;
+  }
+
+  /* 버튼도 너무 커 보이지 않게 살짝 줄임 */
+  body.modeB #btnBuild{
+    min-width: 160px;
+  }
 }
 
 /* =========================
@@ -567,6 +656,21 @@ select option{
     flex-direction:column;
     align-items:stretch;
   }
+
+  .topFilterLeft{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .topFilterTitle{
+    display:block;
+  }
+
+  .topFilterFields{
+    display:flex;
+    flex-wrap:wrap;
+  }
+
   .topFilterRight{
     justify-content:flex-start;
   }

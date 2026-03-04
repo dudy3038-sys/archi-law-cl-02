@@ -1,10 +1,8 @@
 // main.js (FULL REPLACE)
 // archi-law-cl-03
 // ✅ 루트 B(본문 URL 직접 연결) + 법제처 종류별(법령/행정규칙/자치법규) 검색 분기
-// ✅ (추가) A/B 토글: body.modeB 클래스로 "전체화면 레이아웃" ON/OFF
-//    - A(기본): 창모드 레이아웃(기존)
-//    - B: 전체화면 레이아웃(상단 선택바 + 아래 좌/우)
-//    - 토글 UI는 index.html 수정 없이 main.js에서 topbar에 자동 삽입
+// ✅ A/B 토글: index.html의 #abToggle 을 그대로 사용 (자동 삽입 제거)
+// ✅ (요청) 창모드에서 리사이즈로 A/B 자동 전환 금지 → resize 리스너 제거
 //
 // 핵심 동작
 // 1) 열기/복사: doc_url 우선, 없으면 search_url
@@ -288,7 +286,9 @@ function toast(msg) {
 }
 
 /* =========================
-   A/B Layout Toggle (방법 B)
+   A/B Layout Toggle
+   - index.html의 #abToggle 그대로 사용
+   - (요청) resize로 자동 적용/전환 금지
 ========================= */
 
 function getSavedMode() {
@@ -299,95 +299,27 @@ function saveMode(mode) {
   localStorage.setItem(LS_MODE_KEY, mode === "B" ? "B" : "A");
 }
 
-/**
- * 실제 적용은:
- * - 큰 화면(>=1101px)에서만 body.modeB를 적용
- * - 작은 화면에서는 강제로 A처럼 보이게(창모드 보호)
- */
-function applyMode(mode, uiRefs = null, opts = { silent: false }) {
+function applyMode(mode, uiRefs = null) {
   const want = mode === "B" ? "B" : "A";
-  const wide = window.innerWidth >= 1101;
-
-  // 저장은 사용자의 의도대로 저장 (작은 화면에서도 B를 눌렀다면 저장은 B)
   saveMode(want);
 
-  // 적용은 화면 크기에 따라
-  const effective = (want === "B" && wide) ? "B" : "A";
-
-  document.body.classList.toggle("modeB", effective === "B");
+  document.body.classList.toggle("modeB", want === "B");
 
   if (uiRefs) {
     const { btnA, btnB, thumb } = uiRefs;
-    if (btnA) btnA.setAttribute("aria-pressed", effective === "A" ? "true" : "false");
-    if (btnB) btnB.setAttribute("aria-pressed", effective === "B" ? "true" : "false");
-    if (thumb) thumb.textContent = effective; // thumb 안에 A/B 표시
-  }
-
-  if (!opts.silent && want === "B" && !wide) {
-    toast("창이 작아서 A로 표시돼요. (전체화면에서 B 적용)");
+    if (btnA) btnA.setAttribute("aria-pressed", want === "A" ? "true" : "false");
+    if (btnB) btnB.setAttribute("aria-pressed", want === "B" ? "true" : "false");
+    if (thumb) thumb.textContent = want;
   }
 }
 
-function ensureTopbarToggleUI() {
-  const topbar = document.querySelector(".topbar");
-  if (!topbar) return null;
-
-  // 기존 reset 버튼 찾기
-  const btnReset = $("btnReset");
-  if (!btnReset) return null;
-
-  // topbarRight wrapper가 없으면 생성 후 reset 버튼 이동
-  let right = topbar.querySelector(".topbarRight");
-  if (!right) {
-    right = document.createElement("div");
-    right.className = "topbarRight";
-    topbar.appendChild(right);
-    right.appendChild(btnReset); // 일단 reset 이동
-  } else {
-    if (!right.contains(btnReset)) right.appendChild(btnReset);
-  }
-
-  // 이미 토글이 있으면 재사용
-  const existing = right.querySelector(".abToggle");
-  if (existing) {
-    const btnA = existing.querySelector('[data-mode="A"]');
-    const btnB = existing.querySelector('[data-mode="B"]');
-    const thumb = existing.querySelector(".abThumb");
-    return { root: existing, btnA, btnB, thumb };
-  }
-
-  // 토글 생성
-  const wrap = document.createElement("div");
-  wrap.className = "abToggle";
-  wrap.setAttribute("role", "group");
-  wrap.setAttribute("aria-label", "레이아웃 전환");
-
-  const btnA = document.createElement("button");
-  btnA.className = "abBtn";
-  btnA.type = "button";
-  btnA.textContent = "A";
-  btnA.setAttribute("data-mode", "A");
-  btnA.setAttribute("aria-pressed", "true");
-
-  const btnB = document.createElement("button");
-  btnB.className = "abBtn";
-  btnB.type = "button";
-  btnB.textContent = "B";
-  btnB.setAttribute("data-mode", "B");
-  btnB.setAttribute("aria-pressed", "false");
-
-  const thumb = document.createElement("div");
-  thumb.className = "abThumb";
-  thumb.textContent = "A";
-
-  wrap.appendChild(btnA);
-  wrap.appendChild(btnB);
-  wrap.appendChild(thumb);
-
-  // reset 버튼 "앞"에 토글을 넣고 싶으면 insertBefore
-  right.insertBefore(wrap, btnReset);
-
-  return { root: wrap, btnA, btnB, thumb };
+function getToggleRefsFromDom() {
+  const root = $("abToggle") || document.querySelector(".abToggle");
+  if (!root) return null;
+  const btnA = root.querySelector('[data-mode="A"]');
+  const btnB = root.querySelector('[data-mode="B"]');
+  const thumb = root.querySelector(".abThumb");
+  return { root, btnA, btnB, thumb };
 }
 
 /* =========================
@@ -396,15 +328,9 @@ function ensureTopbarToggleUI() {
 
 function lawUrl(kind, query) {
   const q = encodeURIComponent(query);
-  if (kind === "ADM") {
-    return `https://www.law.go.kr/admRulSc.do?query=${q}`;
-  }
-  if (kind === "BYL") {
-    return `https://www.law.go.kr/lsBylSc.do?query=${q}`;
-  }
-  if (kind === "ORD") {
-    return `https://www.law.go.kr/ordinSc.do?menuId=3&subMenuId=27&tabMenuId=139&query=${q}`;
-  }
+  if (kind === "ADM") return `https://www.law.go.kr/admRulSc.do?query=${q}`;
+  if (kind === "BYL") return `https://www.law.go.kr/lsBylSc.do?query=${q}`;
+  if (kind === "ORD") return `https://www.law.go.kr/ordinSc.do?menuId=3&subMenuId=27&tabMenuId=139&query=${q}`;
   return `https://www.law.go.kr/lsSc.do?query=${q}`;
 }
 
@@ -691,9 +617,7 @@ function renderResultLists(ctx) {
 
   const topicKeywordsPreview = uniq(topic.keywords).slice(0, 4).join(", ");
 
-  // =======================
   // 상위법 (LAW/ADM 분기)
-  // =======================
   if (upperList) {
     if (!includeAct) {
       upperList.innerHTML = `<div class="hint">상위법 표시가 꺼져있습니다.</div>`;
@@ -779,9 +703,7 @@ function renderResultLists(ctx) {
     }
   }
 
-  // =======================
   // 자치법규
-  // =======================
   if (ordinList) {
     if (!includeOrdin) {
       ordinList.innerHTML = `<div class="hint">자치법규 표시가 꺼져있습니다.</div>`;
@@ -1011,17 +933,11 @@ function bindEvents(toggleRefs) {
     toast("초기화됨");
   });
 
-  // ✅ A/B 토글 동작
+  // ✅ A/B 토글 동작 (사용자가 눌렀을 때만 변경)
   if (toggleRefs?.btnA && toggleRefs?.btnB) {
     toggleRefs.btnA.addEventListener("click", () => applyMode("A", toggleRefs));
     toggleRefs.btnB.addEventListener("click", () => applyMode("B", toggleRefs));
   }
-
-  // ✅ 창 크기 변경 시: 적용 가능한 상태로 다시 반영(저장값 기준)
-  window.addEventListener("resize", () => {
-    const saved = getSavedMode();
-    applyMode(saved, toggleRefs, { silent: true });
-  }, { passive: true });
 }
 
 /* =========================
@@ -1029,12 +945,12 @@ function bindEvents(toggleRefs) {
 ========================= */
 
 function boot() {
-  // 1) 토글 UI 삽입
-  const toggleRefs = ensureTopbarToggleUI();
+  // 1) 토글 refs (index.html의 #abToggle)
+  const toggleRefs = getToggleRefsFromDom();
 
-  // 2) 저장된 모드 적용(큰 화면에서만 B 적용)
+  // 2) 저장된 모드 적용 (리사이즈 자동전환 없음)
   const saved = getSavedMode();
-  applyMode(saved, toggleRefs, { silent: true });
+  applyMode(saved, toggleRefs);
 
   // 3) 기존 기능 부팅
   initSelects();
