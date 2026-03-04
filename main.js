@@ -1,6 +1,10 @@
 // main.js (FULL REPLACE)
 // archi-law-cl-03
 // ✅ 루트 B(본문 URL 직접 연결) + 법제처 종류별(법령/행정규칙/자치법규) 검색 분기
+// ✅ (추가) A/B 토글: body.modeB 클래스로 "전체화면 레이아웃" ON/OFF
+//    - A(기본): 창모드 레이아웃(기존)
+//    - B: 전체화면 레이아웃(상단 선택바 + 아래 좌/우)
+//    - 토글 UI는 index.html 수정 없이 main.js에서 topbar에 자동 삽입
 //
 // 핵심 동작
 // 1) 열기/복사: doc_url 우선, 없으면 search_url
@@ -183,7 +187,6 @@ const TOPICS = [
     upperLaws: [
       { name:"녹색건축물 조성 지원법", kind:"LAW" },
       { name:"에너지이용 합리화법", kind:"LAW" },
-      // ✅ 여기 때문에 “법령(LS)”로 보내면 0건이 날 수 있어서 ADM로 분기
       { name:"건축물의 에너지절약설계기준", kind:"ADM" },
     ],
     ordinKeywords: ["에너지","녹색","친환경","신재생"],
@@ -226,7 +229,9 @@ const TOPICS = [
    유틸
 ========================= */
 
-const LS_KEY = "archiLawCl03.library.v2"; // ✅ v2로 변경 (doc_url/search_url 저장)
+const LS_KEY = "archiLawCl03.library.v2";
+const LS_MODE_KEY = "archiLawCl03.layoutMode"; // "A" | "B"
+
 function $(id) { return document.getElementById(id); }
 function clean(s) { return String(s ?? "").trim(); }
 function uniq(arr) { return [...new Set((arr ?? []).filter(Boolean))]; }
@@ -283,34 +288,131 @@ function toast(msg) {
 }
 
 /* =========================
+   A/B Layout Toggle (방법 B)
+========================= */
+
+function getSavedMode() {
+  const v = clean(localStorage.getItem(LS_MODE_KEY));
+  return v === "B" ? "B" : "A";
+}
+function saveMode(mode) {
+  localStorage.setItem(LS_MODE_KEY, mode === "B" ? "B" : "A");
+}
+
+/**
+ * 실제 적용은:
+ * - 큰 화면(>=1101px)에서만 body.modeB를 적용
+ * - 작은 화면에서는 강제로 A처럼 보이게(창모드 보호)
+ */
+function applyMode(mode, uiRefs = null, opts = { silent: false }) {
+  const want = mode === "B" ? "B" : "A";
+  const wide = window.innerWidth >= 1101;
+
+  // 저장은 사용자의 의도대로 저장 (작은 화면에서도 B를 눌렀다면 저장은 B)
+  saveMode(want);
+
+  // 적용은 화면 크기에 따라
+  const effective = (want === "B" && wide) ? "B" : "A";
+
+  document.body.classList.toggle("modeB", effective === "B");
+
+  if (uiRefs) {
+    const { btnA, btnB, thumb } = uiRefs;
+    if (btnA) btnA.setAttribute("aria-pressed", effective === "A" ? "true" : "false");
+    if (btnB) btnB.setAttribute("aria-pressed", effective === "B" ? "true" : "false");
+    if (thumb) thumb.textContent = effective; // thumb 안에 A/B 표시
+  }
+
+  if (!opts.silent && want === "B" && !wide) {
+    toast("창이 작아서 A로 표시돼요. (전체화면에서 B 적용)");
+  }
+}
+
+function ensureTopbarToggleUI() {
+  const topbar = document.querySelector(".topbar");
+  if (!topbar) return null;
+
+  // 기존 reset 버튼 찾기
+  const btnReset = $("btnReset");
+  if (!btnReset) return null;
+
+  // topbarRight wrapper가 없으면 생성 후 reset 버튼 이동
+  let right = topbar.querySelector(".topbarRight");
+  if (!right) {
+    right = document.createElement("div");
+    right.className = "topbarRight";
+    topbar.appendChild(right);
+    right.appendChild(btnReset); // 일단 reset 이동
+  } else {
+    if (!right.contains(btnReset)) right.appendChild(btnReset);
+  }
+
+  // 이미 토글이 있으면 재사용
+  const existing = right.querySelector(".abToggle");
+  if (existing) {
+    const btnA = existing.querySelector('[data-mode="A"]');
+    const btnB = existing.querySelector('[data-mode="B"]');
+    const thumb = existing.querySelector(".abThumb");
+    return { root: existing, btnA, btnB, thumb };
+  }
+
+  // 토글 생성
+  const wrap = document.createElement("div");
+  wrap.className = "abToggle";
+  wrap.setAttribute("role", "group");
+  wrap.setAttribute("aria-label", "레이아웃 전환");
+
+  const btnA = document.createElement("button");
+  btnA.className = "abBtn";
+  btnA.type = "button";
+  btnA.textContent = "A";
+  btnA.setAttribute("data-mode", "A");
+  btnA.setAttribute("aria-pressed", "true");
+
+  const btnB = document.createElement("button");
+  btnB.className = "abBtn";
+  btnB.type = "button";
+  btnB.textContent = "B";
+  btnB.setAttribute("data-mode", "B");
+  btnB.setAttribute("aria-pressed", "false");
+
+  const thumb = document.createElement("div");
+  thumb.className = "abThumb";
+  thumb.textContent = "A";
+
+  wrap.appendChild(btnA);
+  wrap.appendChild(btnB);
+  wrap.appendChild(thumb);
+
+  // reset 버튼 "앞"에 토글을 넣고 싶으면 insertBefore
+  right.insertBefore(wrap, btnReset);
+
+  return { root: wrap, btnA, btnB, thumb };
+}
+
+/* =========================
    law.go.kr 링크 생성 (종류별)
 ========================= */
 
 function lawUrl(kind, query) {
   const q = encodeURIComponent(query);
   if (kind === "ADM") {
-    // 행정규칙 검색
     return `https://www.law.go.kr/admRulSc.do?query=${q}`;
   }
   if (kind === "BYL") {
-    // 별표·서식 검색 (파라미터는 법제처 UI 변경 가능성이 있어도 query 기반으로 동작)
     return `https://www.law.go.kr/lsBylSc.do?query=${q}`;
   }
   if (kind === "ORD") {
-    // 자치법규 검색
     return `https://www.law.go.kr/ordinSc.do?menuId=3&subMenuId=27&tabMenuId=139&query=${q}`;
   }
-  // 기본: 법령 검색
   return `https://www.law.go.kr/lsSc.do?query=${q}`;
 }
 
 function buildUpperLawQuery(lawName) {
-  // ✅ 토픽/키워드 섞지 말고 "법령명"만 검색
   return `${lawName}`.trim();
 }
 
 function buildOrdinanceQueryBase({ sido, sigungu }) {
-  // ✅ 검색 0건 방지: 지자체+조례만
   const parts = [];
   if (sido) parts.push(sido);
   if (sigungu) parts.push(sigungu);
@@ -331,7 +433,6 @@ function isValidDocUrl(url) {
 }
 
 function preferUrl(obj) {
-  // obj: {doc_url, search_url} 또는 {url}
   const doc = clean(obj?.doc_url);
   if (doc) return doc;
   const su = clean(obj?.search_url);
@@ -385,7 +486,6 @@ function upsertSource({
   const nextTopics = uniq([...(existing?.topics ?? []), topicLabel]);
   const nextUses = uniq([...(existing?.uses ?? []), useLabel].filter((x) => x && x !== "(미선택)"));
 
-  // ✅ backward compat: 기존 url만 들어오면 search_url로 저장
   const legacyUrl = clean(existing?.url);
   const normalizedSearch = clean(search_url) || clean(existing?.search_url) || legacyUrl || "";
   const normalizedDoc = clean(doc_url) || clean(existing?.doc_url) || "";
@@ -399,8 +499,7 @@ function upsertSource({
     query,
     search_url: normalizedSearch,
     doc_url: normalizedDoc,
-    // legacy 필드 유지(혹시 UI/과거 코드 참조 대비) - 필요 최소
-    url: normalizedSearch,
+    url: normalizedSearch, // legacy
 
     topics: nextTopics,
     uses: nextUses,
@@ -416,7 +515,6 @@ function patchSource(id, patch) {
   const lib = loadLibrary();
   if (!lib.sources[id]) return null;
   lib.sources[id] = { ...lib.sources[id], ...patch, updated_at: nowIso() };
-  // legacy 유지
   if (patch.search_url) lib.sources[id].url = patch.search_url;
   saveLibrary(lib);
   return lib.sources[id];
@@ -552,7 +650,7 @@ function renderItem({ title, subtitle, meta = [], actions = [] }) {
   const act = el.querySelector(".itemActions");
   actions.forEach((a) => {
     const b = document.createElement("button");
-    b.className = `btn ${a.cls ?? ""}`;
+    b.className = `btn ${a.cls ?? ""}`.trim();
     b.textContent = a.label;
     b.addEventListener("click", a.onClick);
     act.appendChild(b);
@@ -573,7 +671,7 @@ function promptDocUrl(existing) {
   const input = prompt(msg, cur || "");
   if (input == null) return { ok: false, canceled: true };
   const val = clean(input);
-  if (!val) return { ok: true, value: "" }; // 빈 값이면 사실상 삭제로 취급 가능
+  if (!val) return { ok: true, value: "" };
   if (!isValidDocUrl(val)) return { ok: false, canceled: false, err: "law.go.kr 본문 URL만 저장 가능해." };
   return { ok: true, value: val };
 }
@@ -600,7 +698,6 @@ function renderResultLists(ctx) {
     if (!includeAct) {
       upperList.innerHTML = `<div class="hint">상위법 표시가 꺼져있습니다.</div>`;
     } else {
-      // backward compat: 문자열 배열이면 LAW로 간주
       const items = (topic.upperLaws ?? []).map((x) => {
         if (typeof x === "string") return { name: x, kind: "LAW" };
         return { name: x?.name ?? "", kind: x?.kind ?? "LAW" };
@@ -610,7 +707,6 @@ function renderResultLists(ctx) {
         const q = buildUpperLawQuery(lawName);
         const search_url = lawUrl(kind, q);
 
-        // 결과 카드 내부에서는 doc_url는 아직 없지만, 저장된 항목이 있다면 불러올 수도 있음(선택)
         const id = makeSourceId({ type: "상위법", name: lawName, jurisdiction: "-" });
         const lib = loadLibrary();
         const existing = lib.sources[id];
@@ -642,7 +738,7 @@ function renderResultLists(ctx) {
                     jurisdiction: "-",
                     query: q,
                     search_url,
-                    doc_url, // 기존 연결 유지
+                    doc_url,
                     topicLabel: topic.label,
                     useLabel,
                   });
@@ -659,7 +755,6 @@ function renderResultLists(ctx) {
                   if (!res.ok) return toast(res.err || "URL 저장 실패");
                   const newDoc = res.value;
 
-                  // 저장소에 반영 (없으면 생성)
                   upsertSource({
                     type: kind === "ADM" ? "행정규칙" : "상위법",
                     kind,
@@ -674,7 +769,6 @@ function renderResultLists(ctx) {
 
                   toast(newDoc ? "본문 URL 연결됨" : "본문 URL 삭제됨");
                   renderLibrary();
-                  // 화면 리렌더
                   renderResultLists(ctx);
                 },
               },
@@ -686,7 +780,7 @@ function renderResultLists(ctx) {
   }
 
   // =======================
-  // 자치법규 (지자체+조례)
+  // 자치법규
   // =======================
   if (ordinList) {
     if (!includeOrdin) {
@@ -763,7 +857,6 @@ function renderResultLists(ctx) {
         })
       );
 
-      // 참고 키워드(본문에서 찾기) - 열기 없음 유지
       const kws = uniq(topic.ordinKeywords);
       if (kws.length) {
         ordinList.appendChild(
@@ -889,7 +982,7 @@ function renderLibrary() {
 
 function on(el, ev, fn) { if (el) el.addEventListener(ev, fn); }
 
-function bindEvents() {
+function bindEvents(toggleRefs) {
   on($("btnBuild"), "click", () => {
     const v = validateInputs();
     if (!v.ok) return toast(v.msg);
@@ -917,6 +1010,18 @@ function bindEvents() {
     renderLibrary();
     toast("초기화됨");
   });
+
+  // ✅ A/B 토글 동작
+  if (toggleRefs?.btnA && toggleRefs?.btnB) {
+    toggleRefs.btnA.addEventListener("click", () => applyMode("A", toggleRefs));
+    toggleRefs.btnB.addEventListener("click", () => applyMode("B", toggleRefs));
+  }
+
+  // ✅ 창 크기 변경 시: 적용 가능한 상태로 다시 반영(저장값 기준)
+  window.addEventListener("resize", () => {
+    const saved = getSavedMode();
+    applyMode(saved, toggleRefs, { silent: true });
+  }, { passive: true });
 }
 
 /* =========================
@@ -924,8 +1029,16 @@ function bindEvents() {
 ========================= */
 
 function boot() {
+  // 1) 토글 UI 삽입
+  const toggleRefs = ensureTopbarToggleUI();
+
+  // 2) 저장된 모드 적용(큰 화면에서만 B 적용)
+  const saved = getSavedMode();
+  applyMode(saved, toggleRefs, { silent: true });
+
+  // 3) 기존 기능 부팅
   initSelects();
-  bindEvents();
+  bindEvents(toggleRefs);
   renderLibrary();
   toast("준비 완료");
 }

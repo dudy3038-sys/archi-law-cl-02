@@ -15,7 +15,19 @@
       <div class="name">archi-law-cl-03</div>
     </div>
   </div>
-  <button id="btnReset" class="btn danger">초기화</button>
+
+  <div class="topbarRight">
+    <!-- ✅ A/B 모드 토글(스위치 UI) -->
+    <div class="abToggle" id="abToggle" role="group" aria-label="레이아웃 모드 전환">
+      <!-- 실제 상태 저장/복원은 main.js에서 처리 -->
+      <button type="button" class="abBtn" data-mode="A" aria-pressed="true" title="A 모드">A</button>
+      <button type="button" class="abBtn" data-mode="B" aria-pressed="false" title="B 모드">B</button>
+      <!-- 스위치 thumb(시각 요소). CSS로 폰 토글처럼 만들 예정 -->
+      <span class="abThumb" aria-hidden="true">A</span>
+    </div>
+
+    <button id="btnReset" class="btn danger">초기화</button>
+  </div>
 </header>
 
 <main class="layout">
