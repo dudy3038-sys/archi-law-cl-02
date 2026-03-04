@@ -3,16 +3,17 @@
 // ✅ B 레이아웃 고정(토글/모드개념 제거)
 // ✅ law.go.kr 종류별(법령/행정규칙/자치법규/별표) 검색 분기
 //
-// 정리 포인트(깔끔한 코드 정책)
-// - 숨김 UI(저장소 필터) 기능/이벤트 완전 제거
-// - 구버전 호환(inpSigungu/dlSigungu) 제거: select 기반 확정
-//
 // 핵심 동작
 // 1) 열기/복사: doc_url 우선, 없으면 search_url
 // 2) 결과 카드에 "본문URL 저장(연결)" 추가 (prompt로 입력)
 // 3) 저장소에서 본문URL 수정/삭제 가능
 // 4) doc_url 최소 검증: http(s) + law.go.kr
 // 5) 상위법 항목은 kind(LAW/ADM)로 검색 탭 정확히 분기
+//
+// ✅ 이번 수정(main.js에서 강제)
+// - 저장소 카드: (b) 태그/배지 = 1줄 가로 왼쪽 정렬
+// - 저장소 카드: (c) 버튼 = 1줄 가로 왼쪽 정렬
+//   -> 구조 자체를 1줄로 바꿔서 CSS에 덜 의존하도록 고정
 
 const SIDO_LIST = [
   "서울특별시","부산광역시","대구광역시","인천광역시","광주광역시","대전광역시","울산광역시","세종특별자치시",
@@ -754,8 +755,7 @@ function renderResultLists(ctx) {
 }
 
 /* =========================
-   저장소 렌더링 (필터 기능 제거 + 카드 배열 정리)
-   - "배열"만 참조(두번째 이미지 기준)
+   저장소 렌더링 (b/c 한줄 강제 구조)
 ========================= */
 
 function renderLibrary() {
@@ -782,7 +782,6 @@ function renderLibrary() {
       const openUrl = preferUrl(s);
       const hasDoc = !!clean(s.doc_url);
 
-      // 배지(토픽/용도) 순서: 토픽 → 용도 (참조 이미지의 느낌)
       const topicBadges = uniq([...(s.topics ?? [])])
         .map((t) => `<span class="metaPill">${escapeHtml(t)}</span>`)
         .join("");
@@ -791,59 +790,54 @@ function renderLibrary() {
         .map((u) => `<span class="metaPill warn">${escapeHtml(u)}</span>`)
         .join("");
 
-      // ✅ 카드 배열(HTML 구조) 정리
-      // - 좌: 제목/서브/배지/검색어
-      // - 우: 버튼 묶음(행 단위)
-      //   1행: 열기 / 복사
-      //   2행: 본문 URL 수정
-      //   3행: 본문 URL 삭제 / 삭제
+      // ✅ 구조 고정
+      // - (b) tagsLine: 1줄
+      // - (c) actionsLine: 1줄
       el.innerHTML = `
-        <div class="libRow">
+        <div class="libRow libRowOneLine">
           <div class="libLeft">
             <div class="title">${escapeHtml(s.name)}</div>
             <div class="sub">${escapeHtml(s.type)}${s.kind ? `(${escapeHtml(s.kind)})` : ""} · ${escapeHtml(s.jurisdiction || "-")}</div>
 
-            <div class="tags">
+            <div class="tags libTagsLine" title="태그">
               ${hasDoc ? `<span class="metaPill warn">본문연결</span>` : ``}
               ${topicBadges}${useBadges}
             </div>
 
-            <div class="hint" style="margin-top:10px; word-break:break-word;">
+            <div class="hint libQueryLine" title="검색어">
               검색어: ${escapeHtml(s.query || "")}
             </div>
           </div>
 
           <div class="libRight">
-            <div class="libActions">
-              <div class="libBtnRow">
-                <button class="btn" data-act="open">열기</button>
-                <button class="btn ghost" data-act="copy">복사</button>
-              </div>
-
-              <div class="libBtnRow">
-                <button class="btn ghost" data-act="editDoc">본문 URL 수정</button>
-              </div>
-
-              <div class="libBtnRow">
-                <button class="btn ghost" data-act="delDoc">본문 URL 삭제</button>
-                <button class="btn danger" data-act="del">삭제</button>
-              </div>
+            <div class="libActions libActionsLine" aria-label="저장소 액션">
+              <button class="btn" data-act="open">열기</button>
+              <button class="btn ghost" data-act="copy">복사</button>
+              <button class="btn ghost" data-act="editDoc">본문 URL 수정</button>
+              <button class="btn ghost" data-act="delDoc">본문 URL 삭제</button>
+              <button class="btn danger" data-act="del">삭제</button>
             </div>
           </div>
         </div>
       `;
 
-      el.querySelector('[data-act="open"]').addEventListener("click", () => {
+      const $open = el.querySelector('[data-act="open"]');
+      const $copy = el.querySelector('[data-act="copy"]');
+      const $editDoc = el.querySelector('[data-act="editDoc"]');
+      const $delDoc = el.querySelector('[data-act="delDoc"]');
+      const $del = el.querySelector('[data-act="del"]');
+
+      $open?.addEventListener("click", () => {
         if (!openUrl) return toast("열 URL이 없어.");
         window.open(openUrl, "_blank", "noopener,noreferrer");
       });
 
-      el.querySelector('[data-act="copy"]').addEventListener("click", () => {
+      $copy?.addEventListener("click", () => {
         if (!openUrl) return toast("복사할 URL이 없어.");
         copyToClipboard(openUrl);
       });
 
-      el.querySelector('[data-act="editDoc"]').addEventListener("click", () => {
+      $editDoc?.addEventListener("click", () => {
         const res = promptDocUrl({ doc_url: s.doc_url });
         if (res.canceled) return;
         if (!res.ok) return toast(res.err || "본문 URL 수정 실패");
@@ -853,7 +847,7 @@ function renderLibrary() {
         renderLibrary();
       });
 
-      el.querySelector('[data-act="delDoc"]').addEventListener("click", () => {
+      $delDoc?.addEventListener("click", () => {
         if (!clean(s.doc_url)) return toast("본문 URL이 없어요.");
         if (!confirm("본문 URL만 삭제할까? (검색 링크는 유지됨)")) return;
 
@@ -862,7 +856,7 @@ function renderLibrary() {
         renderLibrary();
       });
 
-      el.querySelector('[data-act="del"]').addEventListener("click", () => {
+      $del?.addEventListener("click", () => {
         if (!confirm("정말 삭제할까?")) return;
         removeSource(s.id);
         renderLibrary();

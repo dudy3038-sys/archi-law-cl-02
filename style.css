@@ -6,13 +6,11 @@
    - 큰 화면(>=1101px): 상단 선택바 + 아래 좌(저장소)/우(결과)
    - 작은 화면(<1101px): 세로 스택
    - 페이지 스크롤 금지(내부 스크롤만) + 스크롤바 숨김
-   - 선택바: 체크박스(상위법/자치법규 포함) = 토픽 옆(같은 줄)
-   - 선택바/결과 상단 여백 최소화
 
-   ✅ 이번 수정 반영
-   1) 저장소 정렬(a1) = 결과창 정렬(a2) 느낌으로 통일
-   2) 소스/토픽체크 높이(b1) = 결과창 b2와 맞춤
-   3) 저장소 카드 배열(버튼 배열) = 두번째 이미지 ‘배열만’ 참조
+   ✅ 최종 수정 반영(이번 요청)
+   1) (a1 -> a2) 좌측 stats(소스/토픽태그) 상단 여백 줄여 정렬감 위로
+   2) (b) 저장소 카드 태그줄 1줄 가로 왼쪽 정렬(줄바꿈 금지)
+   3) (c) 저장소 카드 버튼줄 1줄 가로 왼쪽 정렬(줄바꿈 금지)
 */
 
 /* =========================
@@ -45,7 +43,6 @@ body{
   color:var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", Segoe UI, Roboto, Arial, sans-serif;
 
-  /* ✅ 페이지 전체 스크롤 금지 -> 내부만 스크롤 */
   overflow:hidden;
 }
 
@@ -102,7 +99,7 @@ body{
    Top Filter Bar
 ========================= */
 .topFilterBar{
-  padding: 8px 10px; /* ✅ 높이 축소 */
+  padding: 8px 10px;
 }
 
 .topFilterInner{
@@ -120,7 +117,6 @@ body{
   min-width:0;
 }
 
-/* 작은 화면에서만 보여줄 타이틀 (기본은 숨김) */
 .topFilterTitle{ display:none; }
 
 .topFilterFields{
@@ -141,10 +137,8 @@ body{
   margin-bottom: 6px;
 }
 
-/* ✅ 토픽도 동일 폭 */
 #selTopic{ min-width: 0; width: 100%; }
 
-/* ✅ 체크박스: 토픽 옆 같은 줄 */
 .topFilterToggles{
   display:flex;
   align-items:center;
@@ -209,14 +203,13 @@ body{
 }
 .card.compact{padding:14px}
 
-/* (보험) 혹시 남아있을 수 있는 h2 숨김 */
 .leftColumn .card > h2,
 .bigResult > h2{
   display:none !important;
 }
 
 /* =========================
-   Result (여백 축소)
+   Result
 ========================= */
 .bigResult{
   height:100%;
@@ -224,7 +217,7 @@ body{
   display:flex;
   flex-direction:column;
   min-height:0;
-  padding-top: 8px; /* ✅ 더 위로 */
+  padding-top: 8px;
 }
 
 .ctxBar{
@@ -249,7 +242,6 @@ body{
   white-space: nowrap;
 }
 
-/* ctxBar 아래만 스크롤 + 스크롤바 숨김 */
 .bigResult > :not(.ctxBar){
   flex: 1 1 auto;
   min-height:0;
@@ -419,7 +411,9 @@ select option{
   display:grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-top: 0;
+
+  /* ✅ (a1->a2) 위로 올리기: 상단 여백 더 줄임 */
+  margin-top: -6px;
 }
 
 .stat{
@@ -490,27 +484,46 @@ select option{
   font-size:12px;
 }
 
-.libItem .tags{
+/* ✅ (b) 태그줄 1줄 고정 */
+.libTagsLine{
   margin-top:10px;
   display:flex;
-  flex-wrap:wrap;
+  align-items:center;
+  justify-content:flex-start;
   gap:8px;
+
+  flex-wrap:nowrap;        /* 줄바꿈 금지 */
+  white-space:nowrap;      /* 텍스트도 한 줄 */
+  overflow:hidden;         /* 넘치면 숨김 */
 }
 
-.libActions{
+/* 태그가 넘치면 마지막이 ...처럼 보이도록(대부분 pill이라 완전한 ...는 어렵지만) */
+.libTagsLine .metaPill{
+  flex: 0 0 auto;
+}
+
+/* ✅ 검색어 줄(길면 ... 처리) */
+.libQueryLine{
+  margin-top:10px;
+  word-break:normal;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* ✅ (c) 버튼줄 1줄 고정 */
+.libActionsLine{
   display:flex;
-  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
   gap:10px;
-  align-items:flex-end;
+
+  flex-wrap:nowrap;     /* 줄바꿈 금지 */
+  white-space:nowrap;
+  overflow:hidden;      /* 가로가 부족하면 숨김 */
 }
 
-.libBtnRow{
-  display:flex;
-  gap:10px;
-  justify-content:flex-end;
-  flex-wrap:wrap;
-}
-
+/* 버튼은 조금 더 컴팩트하게 */
 .leftColumn .libItem .btn{
   padding: 9px 12px;
   border-radius: 14px;
@@ -574,17 +587,21 @@ select option{
   #libList{ overflow:visible; }
 
   .libRow{ flex-direction:column; }
-  .libActions{ align-items:flex-start; }
-  .libBtnRow{ justify-content:flex-start; }
+  .libActionsLine{
+    flex-wrap:wrap;       /* 모바일은 줄바꿈 허용 */
+    overflow:visible;
+  }
+  .libTagsLine{
+    flex-wrap:wrap;       /* 모바일은 줄바꿈 허용 */
+    overflow:visible;
+  }
 }
 
 /* =========================
    ✅ CSS 로딩 확인용 스탬프 (진단용)
-   - 배포 후 우하단에 표시되면 "새 CSS가 로딩된 것"
-   - 확인 끝나면 이 블록 삭제해도 됨
 ========================= */
 body::after{
-  content: "CSS v2026-03-04.1";
+  content: "CSS v2026-03-04.2";
   position: fixed;
   right: 12px;
   bottom: 10px;
