@@ -1,11 +1,15 @@
 /* style.css (FULL REPLACE)
    archi-law-cl-03 dark UI
 
-   ✅ 이번 수정(정확 반영)
+   ✅ 이번 수정(정확 반영 / main.js 새 구조 대응)
    - (a1→a2) 좌측 stats 블록 살짝 위로
-   - (b) 저장소 태그(.tags) 1줄 + 가로스크롤
-   - (c) 저장소 버튼 1줄 + 가로스크롤 (기존 .libBtnRow 3줄 구조를 CSS로 평탄화)
    - 제목이 세로로 쪼개지는 현상 방지(최우선)
+   - 저장소 카드 줄 구조(예시 고정):
+     1) title
+     2) sub
+     3) 검색어(3번째 줄) 1줄 ... 처리
+     4) b 라인(.libMetaLine) 1줄 + 가로스크롤(숨김)
+     5) c 라인(.libActionsLine) 1줄 + 가로스크롤(숨김)
 */
 
 :root{
@@ -34,6 +38,8 @@ body{
     var(--bg);
   color:var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", Segoe UI, Roboto, Arial, sans-serif;
+
+  /* 데스크탑: 페이지 전체 스크롤 금지 */
   overflow:hidden;
 }
 
@@ -386,13 +392,25 @@ select option{ background-color: #070b14; color: var(--text); }
   background: rgba(0,0,0,.18);
 }
 
-/* ✅ 제목 세로쪼개짐 방지 핵심 */
+/* ✅ main.js 새 구조 컨테이너 */
+.libCard{
+  display:flex;
+  flex-direction:column;
+  gap: 0;
+  min-width:0;
+}
+
+/* ✅ 제목 세로쪼개짐 방지(최우선) */
 .libItem .title{
   font-weight:900;
   letter-spacing:.1px;
-  word-break: keep-all;      /* 한글 글자 단위 쪼개짐 방지 */
+
+  word-break: keep-all;
   overflow-wrap: normal;
   white-space: normal;
+
+  /* 혹시 폭이 극단적으로 좁아도 글자 단위로 쪼개지지 않도록 */
+  line-break: strict;
 }
 .libItem .sub{
   margin-top:6px;
@@ -400,42 +418,8 @@ select option{ background-color: #070b14; color: var(--text); }
   font-size:12px;
 }
 
-/* 좌/우 레이아웃 — 좌측 최소폭 보장(세로쪼개짐 예방) */
-.libRow{
-  display:flex;
-  gap:12px;
-  align-items:flex-start;
-  justify-content:space-between;
-}
-.libLeft{
-  flex: 1 1 auto;
-  min-width: 260px;          /* ✅ 너무 좁아지지 않게 하드가드 */
-}
-.libRight{
-  flex: 0 0 auto;
-  max-width: 100%;
-}
-
-/* (b) 태그: 1줄 + 가로스크롤(숨김) + 왼쪽정렬 */
-.libItem .tags{
-  margin-top:10px;
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  gap:8px;
-
-  flex-wrap:nowrap;
-  white-space:nowrap;
-  overflow-x:auto;
-  overflow-y:hidden;
-
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-.libItem .tags::-webkit-scrollbar{ width:0; height:0; }
-
-/* 검색어 줄은 한줄 ... */
-.libItem .hint{
+/* ✅ 3번째 줄(검색어): 1줄 ... */
+.libQueryLine{
   margin-top:10px;
   word-break:normal;
   white-space:nowrap;
@@ -443,13 +427,35 @@ select option{ background-color: #070b14; color: var(--text); }
   text-overflow:ellipsis;
 }
 
-/* (c) 버튼: 1줄로 “평탄화”
-   - main.js 구조: .libActions 안에 .libBtnRow(3줄)
-   - CSS로 .libBtnRow를 contents로 만들어 한줄처럼 보이게 함
-*/
-.libActions{
+/* ✅ 4번째 줄(b 라인): 1줄 + 가로스크롤(숨김) */
+.libMetaLine{
+  margin-top:10px;
   display:flex;
-  flex-direction:row;
+  align-items:center;
+  gap: 10px;
+
+  flex-wrap:nowrap;
+  white-space:nowrap;
+  overflow-x:auto;
+  overflow-y:hidden;
+
+  color: rgba(233,238,252,.92);
+  font-size:12px;
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.libMetaLine::-webkit-scrollbar{ width:0; height:0; }
+
+/* b 라인이 텍스트라서 너무 붙어보이면 약간 톤 다운 */
+.libMetaLine{
+  color: rgba(167,176,199,.92);
+}
+
+/* ✅ 5번째 줄(c 라인): 버튼 1줄 + 가로스크롤(숨김) */
+.libActionsLine{
+  margin-top:10px;
+  display:flex;
   align-items:center;
   justify-content:flex-start;
   gap:10px;
@@ -462,15 +468,20 @@ select option{ background-color: #070b14; color: var(--text); }
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-.libActions::-webkit-scrollbar{ width:0; height:0; }
-
-.libBtnRow{
-  display: contents;   /* ✅ 3줄을 DOM만 남기고 레이아웃은 1줄로 */
-}
+.libActionsLine::-webkit-scrollbar{ width:0; height:0; }
 
 .leftColumn .libItem .btn{
   padding: 9px 12px;
   border-radius: 14px;
+}
+
+/* =========================
+   (호환) 예전 구조가 남아있어도 깨지지 않게
+========================= */
+.libRow, .libLeft, .libRight,
+.libItem .tags, .libActions, .libBtnRow{
+  /* 새 구조에서는 안 쓰지만, 남아있어도 레이아웃 폭주 방지 */
+  max-width: 100%;
 }
 
 /* =========================
@@ -508,20 +519,16 @@ select option{ background-color: #070b14; color: var(--text); }
   .bigResult > :not(.ctxBar){ overflow:visible; }
   #libList{ overflow:visible; }
 
-  .libRow{ flex-direction:column; }
-  .libLeft{ min-width: 0; }
-
-  /* 모바일은 줄바꿈 허용(보이는 게 우선) */
-  .libItem .tags{ flex-wrap:wrap; white-space:normal; overflow:visible; }
-  .libActions{ flex-wrap:wrap; white-space:normal; overflow:visible; }
-  .libBtnRow{ display:flex; gap:10px; flex-wrap:wrap; }
+  /* 모바일은 가로스크롤보다 “보이는 것” 우선 */
+  .libMetaLine{ flex-wrap:wrap; white-space:normal; overflow:visible; }
+  .libActionsLine{ flex-wrap:wrap; white-space:normal; overflow:visible; }
 }
 
 /* =========================
    CSS 로딩 확인용 스탬프
 ========================= */
 body::after{
-  content: "CSS v2026-03-04.3";
+  content: "CSS v2026-03-04.4";
   position: fixed;
   right: 12px;
   bottom: 10px;

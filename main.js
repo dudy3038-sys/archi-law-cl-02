@@ -10,10 +10,14 @@
 // 4) doc_url 최소 검증: http(s) + law.go.kr
 // 5) 상위법 항목은 kind(LAW/ADM)로 검색 탭 정확히 분기
 //
-// ✅ 이번 수정(main.js에서 강제)
-// - 저장소 카드: (b) 태그/배지 = 1줄 가로 왼쪽 정렬
-// - 저장소 카드: (c) 버튼 = 1줄 가로 왼쪽 정렬
-//   -> 구조 자체를 1줄로 바꿔서 CSS에 덜 의존하도록 고정
+// ✅ 이번 최종 수정(main.js에서 강제)
+// - 저장소 카드 줄 구조(예시 이미지 고정):
+//   1) 제목
+//   2) 타입/관할
+//   3) 검색어: ~~~
+//   4) b 라인: "토픽 / 용도 / 본문연결" (1줄, 왼쪽정렬, 텍스트)
+//   5) c 라인: 버튼 1줄 가로(왼쪽정렬) "열기/복사/본문 URL 수정/본문 URL 삭제/삭제"
+// - 버튼/텍스트가 우측에서 잘리지 않게: 저장소 카드는 "우측 컬럼" 제거(한 컬럼 고정)
 
 const SIDO_LIST = [
   "서울특별시","부산광역시","대구광역시","인천광역시","광주광역시","대전광역시","울산광역시","세종특별자치시",
@@ -509,7 +513,7 @@ function setCtxBar({ sido, sigungu, useLabel, topicLabel }) {
 }
 
 /* =========================
-   렌더링
+   렌더링(결과)
 ========================= */
 
 function renderItem({ title, subtitle, meta = [], actions = [] }) {
@@ -755,7 +759,7 @@ function renderResultLists(ctx) {
 }
 
 /* =========================
-   저장소 렌더링 (b/c 한줄 강제 구조)
+   저장소 렌더링 (예시 줄 구조 강제)
 ========================= */
 
 function renderLibrary() {
@@ -782,41 +786,33 @@ function renderLibrary() {
       const openUrl = preferUrl(s);
       const hasDoc = !!clean(s.doc_url);
 
-      const topicBadges = uniq([...(s.topics ?? [])])
-        .map((t) => `<span class="metaPill">${escapeHtml(t)}</span>`)
-        .join("");
+      // b 라인: "토픽 / 용도 / 본문연결" (텍스트 1줄)
+      const parts = [];
+      const topics = uniq([...(s.topics ?? [])]);
+      const uses = uniq([...(s.uses ?? [])]);
+      topics.forEach((t) => parts.push(t));
+      uses.forEach((u) => parts.push(u));
+      if (hasDoc) parts.push("본문연결");
+      const metaLine = parts.join(" / ");
 
-      const useBadges = uniq([...(s.uses ?? [])])
-        .map((u) => `<span class="metaPill warn">${escapeHtml(u)}</span>`)
-        .join("");
-
-      // ✅ 구조 고정
-      // - (b) tagsLine: 1줄
-      // - (c) actionsLine: 1줄
       el.innerHTML = `
-        <div class="libRow libRowOneLine">
-          <div class="libLeft">
-            <div class="title">${escapeHtml(s.name)}</div>
-            <div class="sub">${escapeHtml(s.type)}${s.kind ? `(${escapeHtml(s.kind)})` : ""} · ${escapeHtml(s.jurisdiction || "-")}</div>
+        <div class="libCard">
+          <div class="title">${escapeHtml(s.name)}</div>
+          <div class="sub">${escapeHtml(s.type)}${s.kind ? `(${escapeHtml(s.kind)})` : ""} · ${escapeHtml(s.jurisdiction || "-")}</div>
 
-            <div class="tags libTagsLine" title="태그">
-              ${hasDoc ? `<span class="metaPill warn">본문연결</span>` : ``}
-              ${topicBadges}${useBadges}
-            </div>
+          <!-- ✅ 3번째 줄(고정): 검색어 -->
+          <div class="hint libQueryLine">검색어: ${escapeHtml(s.query || "")}</div>
 
-            <div class="hint libQueryLine" title="검색어">
-              검색어: ${escapeHtml(s.query || "")}
-            </div>
-          </div>
+          <!-- ✅ 4번째 줄(고정): b 라인 -->
+          <div class="libMetaLine" title="b 라인">${escapeHtml(metaLine)}</div>
 
-          <div class="libRight">
-            <div class="libActions libActionsLine" aria-label="저장소 액션">
-              <button class="btn" data-act="open">열기</button>
-              <button class="btn ghost" data-act="copy">복사</button>
-              <button class="btn ghost" data-act="editDoc">본문 URL 수정</button>
-              <button class="btn ghost" data-act="delDoc">본문 URL 삭제</button>
-              <button class="btn danger" data-act="del">삭제</button>
-            </div>
+          <!-- ✅ 5번째 줄(고정): c 라인 -->
+          <div class="libActionsLine" aria-label="c 라인">
+            <button class="btn" data-act="open">열기</button>
+            <button class="btn ghost" data-act="copy">복사</button>
+            <button class="btn ghost" data-act="editDoc">본문 URL 수정</button>
+            <button class="btn ghost" data-act="delDoc">본문 URL 삭제</button>
+            <button class="btn danger" data-act="del">삭제</button>
           </div>
         </div>
       `;
