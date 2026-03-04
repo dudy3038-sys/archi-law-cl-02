@@ -1,8 +1,7 @@
 // main.js (FULL REPLACE)
 // archi-law-cl-03
+// ✅ B 레이아웃 고정(토글/모드개념 제거)
 // ✅ 루트 B(본문 URL 직접 연결) + 법제처 종류별(법령/행정규칙/자치법규) 검색 분기
-// ✅ A/B 토글: index.html의 #abToggle 을 그대로 사용 (자동 삽입 제거)
-// ✅ (요청) 창모드에서 리사이즈로 A/B 자동 전환 금지 → resize 리스너 제거
 //
 // 핵심 동작
 // 1) 열기/복사: doc_url 우선, 없으면 search_url
@@ -10,7 +9,6 @@
 // 3) 저장소에서 URL 수정 / 본문URL 삭제 가능
 // 4) doc_url 최소 검증: http(s) + law.go.kr
 // 5) 상위법 항목은 kind(LAW/ADM)로 검색 탭 정확히 분기
-//    - 예: "건축물의 에너지절약설계기준" => 행정규칙(ADM)
 
 const SIDO_LIST = [
   "서울특별시","부산광역시","대구광역시","인천광역시","광주광역시","대전광역시","울산광역시","세종특별자치시",
@@ -228,7 +226,6 @@ const TOPICS = [
 ========================= */
 
 const LS_KEY = "archiLawCl03.library.v2";
-const LS_MODE_KEY = "archiLawCl03.layoutMode"; // "A" | "B"
 
 function $(id) { return document.getElementById(id); }
 function clean(s) { return String(s ?? "").trim(); }
@@ -283,43 +280,6 @@ function toast(msg) {
   el.textContent = msg;
   el.style.opacity = "1";
   _toastTimer = setTimeout(() => (el.style.opacity = "0"), 1400);
-}
-
-/* =========================
-   A/B Layout Toggle
-   - index.html의 #abToggle 그대로 사용
-   - (요청) resize로 자동 적용/전환 금지
-========================= */
-
-function getSavedMode() {
-  const v = clean(localStorage.getItem(LS_MODE_KEY));
-  return v === "B" ? "B" : "A";
-}
-function saveMode(mode) {
-  localStorage.setItem(LS_MODE_KEY, mode === "B" ? "B" : "A");
-}
-
-function applyMode(mode, uiRefs = null) {
-  const want = mode === "B" ? "B" : "A";
-  saveMode(want);
-
-  document.body.classList.toggle("modeB", want === "B");
-
-  if (uiRefs) {
-    const { btnA, btnB, thumb } = uiRefs;
-    if (btnA) btnA.setAttribute("aria-pressed", want === "A" ? "true" : "false");
-    if (btnB) btnB.setAttribute("aria-pressed", want === "B" ? "true" : "false");
-    if (thumb) thumb.textContent = want;
-  }
-}
-
-function getToggleRefsFromDom() {
-  const root = $("abToggle") || document.querySelector(".abToggle");
-  if (!root) return null;
-  const btnA = root.querySelector('[data-mode="A"]');
-  const btnB = root.querySelector('[data-mode="B"]');
-  const thumb = root.querySelector(".abThumb");
-  return { root, btnA, btnB, thumb };
 }
 
 /* =========================
@@ -622,10 +582,9 @@ function renderResultLists(ctx) {
     if (!includeAct) {
       upperList.innerHTML = `<div class="hint">상위법 표시가 꺼져있습니다.</div>`;
     } else {
-      const items = (topic.upperLaws ?? []).map((x) => {
-        if (typeof x === "string") return { name: x, kind: "LAW" };
-        return { name: x?.name ?? "", kind: x?.kind ?? "LAW" };
-      }).filter((x) => clean(x.name));
+      const items = (topic.upperLaws ?? [])
+        .map((x) => (typeof x === "string" ? { name: x, kind: "LAW" } : { name: x?.name ?? "", kind: x?.kind ?? "LAW" }))
+        .filter((x) => clean(x.name));
 
       items.forEach(({ name: lawName, kind }) => {
         const q = buildUpperLawQuery(lawName);
@@ -904,7 +863,7 @@ function renderLibrary() {
 
 function on(el, ev, fn) { if (el) el.addEventListener(ev, fn); }
 
-function bindEvents(toggleRefs) {
+function bindEvents() {
   on($("btnBuild"), "click", () => {
     const v = validateInputs();
     if (!v.ok) return toast(v.msg);
@@ -932,12 +891,6 @@ function bindEvents(toggleRefs) {
     renderLibrary();
     toast("초기화됨");
   });
-
-  // ✅ A/B 토글 동작 (사용자가 눌렀을 때만 변경)
-  if (toggleRefs?.btnA && toggleRefs?.btnB) {
-    toggleRefs.btnA.addEventListener("click", () => applyMode("A", toggleRefs));
-    toggleRefs.btnB.addEventListener("click", () => applyMode("B", toggleRefs));
-  }
 }
 
 /* =========================
@@ -945,16 +898,8 @@ function bindEvents(toggleRefs) {
 ========================= */
 
 function boot() {
-  // 1) 토글 refs (index.html의 #abToggle)
-  const toggleRefs = getToggleRefsFromDom();
-
-  // 2) 저장된 모드 적용 (리사이즈 자동전환 없음)
-  const saved = getSavedMode();
-  applyMode(saved, toggleRefs);
-
-  // 3) 기존 기능 부팅
   initSelects();
-  bindEvents(toggleRefs);
+  bindEvents();
   renderLibrary();
   toast("준비 완료");
 }
