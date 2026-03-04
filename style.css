@@ -11,12 +11,15 @@
 
    ✅ 이번 수정 반영
    1) 저장소 정렬(a1) = 결과창 정렬(a2) 느낌으로 통일
-      - stats 카드와 libItem 카드의 모서리/여백/라인/배경을 결과 영역의 패널/아이템과 동일 톤으로 정렬
-      - stats 영역을 상단 바 느낌으로 더 “한 줄 정렬”되게
+      - 좌측 카드/배지/버튼 정렬을 결과 카드 톤/정렬 규칙과 동일하게
    2) 소스/토픽체크 높이(b1) = 결과창 b2와 맞춤
-      - 숫자(.stat .v) 크기 조절 + 패딩/라인하이트 조절
+      - stats 카드 패딩/숫자 크기/라인하이트를 ctxBar와 비슷한 높이로
    3) 저장소 카드 배열(버튼 배열) = 두번째 이미지 ‘배열만’ 참조
       - main.js에서 만든 .libRow/.libLeft/.libRight/.libActions/.libBtnRow 스타일 추가
+
+   ✅ 추가로 “반영 안됨” 방지
+   - 기존 DOM에 남아 있을 수 있는 .libItem .top(구구조)도 안전하게 지원
+   - 캐시 때문에 CSS가 안 바뀐 것처럼 보일 수 있어, 교체 후 강력 새로고침 권장
 */
 
 /* =========================
@@ -346,7 +349,7 @@ select option{
 }
 
 /* =========================
-   Badges
+   Badges / Meta pills
 ========================= */
 .badge{
   display:inline-flex;
@@ -359,6 +362,19 @@ select option{
   color: rgba(233,238,252,.92);
 }
 .badge.soft{background: rgba(43,108,255,.12); border-color: rgba(43,108,255,.18);}
+
+.metaPill{
+  display:inline-flex;
+  align-items:center;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  font-size:12px;
+  color: rgba(233,238,252,.92);
+}
+.metaPill.good{background: rgba(0,255,170,.10); border-color: rgba(0,255,170,.18);}
+.metaPill.warn{background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.20);}
 
 /* =========================
    Items
@@ -381,19 +397,6 @@ select option{
   flex-wrap:wrap;
 }
 
-.metaPill{
-  display:inline-flex;
-  align-items:center;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.06);
-  font-size:12px;
-  color: rgba(233,238,252,.92);
-}
-.metaPill.good{background: rgba(0,255,170,.10); border-color: rgba(0,255,170,.18);}
-.metaPill.warn{background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.20);}
-
 .itemActions{
   margin-top: 12px;
   display:flex;
@@ -403,9 +406,6 @@ select option{
 
 /* =========================
    Library (좌측)
-   - a1 정렬을 결과 느낌(a2)으로 맞추기
-   - b1 높이를 b2로 맞추기 (stat 숫자 크기/패딩 조정)
-   - 카드 내부 배열(.libRow ...) 지원
 ========================= */
 .leftColumn .card{
   flex: 1 1 auto;
@@ -422,7 +422,7 @@ select option{
   padding:0 !important;
 }
 
-/* ✅ stats: 결과 상단 바(ctxBar) 톤과 정렬 맞춤 */
+/* ✅ stats: 결과 상단바(ctxBar)와 높이/톤을 맞춤 (b1=b2) */
 .stats{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -430,22 +430,19 @@ select option{
   margin-top: 0;
 }
 
-/* stats 카드 자체도 결과의 panel과 비슷한 톤으로 */
 .stat{
-  padding: 10px 12px; /* ✅ 높이(b1) 맞추기 위해 살짝 축소 */
+  padding: 10px 12px; /* ✅ 높이 축소 */
   border-radius: 16px;
   border:1px solid var(--line);
   background: rgba(0,0,0,.22);
 }
 
-/* 라벨 */
 .stat .k{
   color: rgba(167,176,199,.90);
   font-size:12px;
   line-height: 1.1;
 }
 
-/* ✅ 숫자 크기/라인하이트 조정으로 b1 -> b2 맞춤 */
 .stat .v{
   font-size:20px;       /* 22 -> 20 */
   font-weight:900;
@@ -468,7 +465,7 @@ select option{
   height: 0;
 }
 
-/* ✅ 저장소 카드 톤을 결과 item/panel에 맞춰 통일 */
+/* ✅ 저장소 카드 톤을 결과 item/panel과 통일 (a1=a2 느낌) */
 .libItem{
   padding: 14px;
   border-radius: 16px;
@@ -476,7 +473,9 @@ select option{
   background: rgba(0,0,0,.18);
 }
 
-/* main.js 새 구조 대응 */
+/* =========================
+   Library layout (NEW structure from main.js)
+========================= */
 .libRow{
   display:flex;
   gap:12px;
@@ -504,7 +503,6 @@ select option{
   font-size:12px;
 }
 
-/* 배지 영역 */
 .libItem .tags{
   margin-top:10px;
   display:flex;
@@ -512,7 +510,7 @@ select option{
   gap:8px;
 }
 
-/* ✅ 버튼 배열(두번째 이미지의 “배열”만 참조) */
+/* ✅ 버튼 배열(두번째 이미지의 ‘배열만’ 참조) */
 .libActions{
   display:flex;
   flex-direction:column;
@@ -527,10 +525,21 @@ select option{
   flex-wrap:wrap;
 }
 
-/* 저장소에서 버튼이 너무 커 보이면 살짝만 컴팩트 */
+/* 저장소 버튼은 살짝 컴팩트 */
 .leftColumn .libItem .btn{
-  padding: 9px 12px;     /* 10/14 -> 9/12 */
+  padding: 9px 12px;
   border-radius: 14px;
+}
+
+/* =========================
+   Backward compatibility (OLD structure safety)
+   - 혹시 배포/캐시/혼재로 예전 구조(.libItem .top)가 남아있어도 정렬이 깨지지 않게
+========================= */
+.libItem .top{
+  display:flex;
+  gap:10px;
+  justify-content:space-between;
+  align-items:flex-start;
 }
 
 /* =========================
@@ -557,7 +566,6 @@ select option{
     gap: 8px;
   }
 
-  /* 작은 화면에서는 타이틀 보여주기 */
   .topFilterTitle{
     display:block;
     font-size:16px;
@@ -591,7 +599,6 @@ select option{
   .bigResult > :not(.ctxBar){ overflow:visible; }
   #libList{ overflow:visible; }
 
-  /* 작은 화면에서는 저장소 카드도 세로로 */
   .libRow{
     flex-direction:column;
   }
