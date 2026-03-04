@@ -8,6 +8,15 @@
    - 페이지 스크롤 금지(내부 스크롤만) + 스크롤바 숨김
    - 선택바: 체크박스(상위법/자치법규 포함) = 토픽 옆(같은 줄)
    - 선택바/결과 상단 여백 최소화
+
+   ✅ 이번 수정 반영
+   1) 저장소 정렬(a1) = 결과창 정렬(a2) 느낌으로 통일
+      - stats 카드와 libItem 카드의 모서리/여백/라인/배경을 결과 영역의 패널/아이템과 동일 톤으로 정렬
+      - stats 영역을 상단 바 느낌으로 더 “한 줄 정렬”되게
+   2) 소스/토픽체크 높이(b1) = 결과창 b2와 맞춤
+      - 숫자(.stat .v) 크기 조절 + 패딩/라인하이트 조절
+   3) 저장소 카드 배열(버튼 배열) = 두번째 이미지 ‘배열만’ 참조
+      - main.js에서 만든 .libRow/.libLeft/.libRight/.libActions/.libBtnRow 스타일 추가
 */
 
 /* =========================
@@ -393,7 +402,10 @@ select option{
 }
 
 /* =========================
-   Library
+   Library (좌측)
+   - a1 정렬을 결과 느낌(a2)으로 맞추기
+   - b1 높이를 b2로 맞추기 (stat 숫자 크기/패딩 조정)
+   - 카드 내부 배열(.libRow ...) 지원
 ========================= */
 .leftColumn .card{
   flex: 1 1 auto;
@@ -408,6 +420,37 @@ select option{
   display:none !important;
   margin:0 !important;
   padding:0 !important;
+}
+
+/* ✅ stats: 결과 상단 바(ctxBar) 톤과 정렬 맞춤 */
+.stats{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 0;
+}
+
+/* stats 카드 자체도 결과의 panel과 비슷한 톤으로 */
+.stat{
+  padding: 10px 12px; /* ✅ 높이(b1) 맞추기 위해 살짝 축소 */
+  border-radius: 16px;
+  border:1px solid var(--line);
+  background: rgba(0,0,0,.22);
+}
+
+/* 라벨 */
+.stat .k{
+  color: rgba(167,176,199,.90);
+  font-size:12px;
+  line-height: 1.1;
+}
+
+/* ✅ 숫자 크기/라인하이트 조정으로 b1 -> b2 맞춤 */
+.stat .v{
+  font-size:20px;       /* 22 -> 20 */
+  font-weight:900;
+  margin-top: 6px;
+  line-height: 1.05;
 }
 
 /* 저장소 리스트만 스크롤 + 스크롤바 숨김 */
@@ -425,33 +468,70 @@ select option{
   height: 0;
 }
 
-/* stats */
-.stats{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-top: 0;
-}
-
-.stat{
-  padding: 12px;
-  border-radius: 16px;
-  border:1px solid var(--line);
-  background: rgba(0,0,0,.22);
-}
-.stat .k{color: rgba(167,176,199,.90); font-size:12px;}
-.stat .v{font-size:22px; font-weight:900; margin-top: 6px;}
-
+/* ✅ 저장소 카드 톤을 결과 item/panel에 맞춰 통일 */
 .libItem{
   padding: 14px;
   border-radius: 16px;
   border:1px solid rgba(255,255,255,.10);
   background: rgba(0,0,0,.18);
 }
-.libItem .title{font-weight:900;}
-.libItem .sub{margin-top:6px; color: rgba(167,176,199,.92); font-size:12px;}
-.libItem .tags{margin-top:10px; display:flex; flex-wrap:wrap; gap:8px;}
-.libItem .top{display:flex; gap:10px; justify-content:space-between; align-items:flex-start;}
+
+/* main.js 새 구조 대응 */
+.libRow{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  justify-content:space-between;
+}
+
+.libLeft{
+  flex: 1 1 auto;
+  min-width:0;
+}
+
+.libRight{
+  flex: 0 0 auto;
+}
+
+.libItem .title{
+  font-weight:900;
+  letter-spacing:.1px;
+}
+
+.libItem .sub{
+  margin-top:6px;
+  color: rgba(167,176,199,.92);
+  font-size:12px;
+}
+
+/* 배지 영역 */
+.libItem .tags{
+  margin-top:10px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+}
+
+/* ✅ 버튼 배열(두번째 이미지의 “배열”만 참조) */
+.libActions{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  align-items:flex-end;
+}
+
+.libBtnRow{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+}
+
+/* 저장소에서 버튼이 너무 커 보이면 살짝만 컴팩트 */
+.leftColumn .libItem .btn{
+  padding: 9px 12px;     /* 10/14 -> 9/12 */
+  border-radius: 14px;
+}
 
 /* =========================
    Responsive (작은 화면: 세로 스택)
@@ -510,4 +590,15 @@ select option{
   .bigResult{height:auto; overflow:visible; display:block;}
   .bigResult > :not(.ctxBar){ overflow:visible; }
   #libList{ overflow:visible; }
+
+  /* 작은 화면에서는 저장소 카드도 세로로 */
+  .libRow{
+    flex-direction:column;
+  }
+  .libActions{
+    align-items:flex-start;
+  }
+  .libBtnRow{
+    justify-content:flex-start;
+  }
 }

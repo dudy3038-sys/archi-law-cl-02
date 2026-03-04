@@ -754,7 +754,8 @@ function renderResultLists(ctx) {
 }
 
 /* =========================
-   저장소 렌더링 (필터 기능 제거 버전)
+   저장소 렌더링 (필터 기능 제거 + 카드 배열 정리)
+   - "배열"만 참조(두번째 이미지 기준)
 ========================= */
 
 function renderLibrary() {
@@ -764,7 +765,9 @@ function renderLibrary() {
 
   if ($("statSources")) $("statSources").textContent = String(sources.length);
   if ($("statTags")) {
-    $("statTags").textContent = String(sources.reduce((acc, s) => acc + (s.topics?.length ?? 0), 0));
+    $("statTags").textContent = String(
+      sources.reduce((acc, s) => acc + (s.topics?.length ?? 0), 0)
+    );
   }
 
   if (!listEl) return;
@@ -776,31 +779,58 @@ function renderLibrary() {
       const el = document.createElement("div");
       el.className = "libItem";
 
-      const tags = uniq([...(s.topics ?? [])]).map((t) => `<span class="metaPill">${escapeHtml(t)}</span>`).join("");
-      const uses = uniq([...(s.uses ?? [])]).map((u) => `<span class="metaPill warn">${escapeHtml(u)}</span>`).join("");
-
-      const hasDoc = !!clean(s.doc_url);
       const openUrl = preferUrl(s);
+      const hasDoc = !!clean(s.doc_url);
 
+      // 배지(토픽/용도) 순서: 토픽 → 용도 (참조 이미지의 느낌)
+      const topicBadges = uniq([...(s.topics ?? [])])
+        .map((t) => `<span class="metaPill">${escapeHtml(t)}</span>`)
+        .join("");
+
+      const useBadges = uniq([...(s.uses ?? [])])
+        .map((u) => `<span class="metaPill warn">${escapeHtml(u)}</span>`)
+        .join("");
+
+      // ✅ 카드 배열(HTML 구조) 정리
+      // - 좌: 제목/서브/배지/검색어
+      // - 우: 버튼 묶음(행 단위)
+      //   1행: 열기 / 복사
+      //   2행: 본문 URL 수정
+      //   3행: 본문 URL 삭제 / 삭제
       el.innerHTML = `
-        <div class="top">
-          <div>
+        <div class="libRow">
+          <div class="libLeft">
             <div class="title">${escapeHtml(s.name)}</div>
             <div class="sub">${escapeHtml(s.type)}${s.kind ? `(${escapeHtml(s.kind)})` : ""} · ${escapeHtml(s.jurisdiction || "-")}</div>
+
             <div class="tags">
               ${hasDoc ? `<span class="metaPill warn">본문연결</span>` : ``}
-              ${tags}${uses}
+              ${topicBadges}${useBadges}
+            </div>
+
+            <div class="hint" style="margin-top:10px; word-break:break-word;">
+              검색어: ${escapeHtml(s.query || "")}
             </div>
           </div>
-          <div style="display:flex; gap:8px; align-items:flex-start; flex-wrap:wrap; justify-content:flex-end;">
-            <button class="btn" data-act="open">열기</button>
-            <button class="btn ghost" data-act="copy">복사</button>
-            <button class="btn ghost" data-act="editDoc">본문 URL 수정</button>
-            <button class="btn ghost" data-act="delDoc">본문 URL 삭제</button>
-            <button class="btn danger" data-act="del">삭제</button>
+
+          <div class="libRight">
+            <div class="libActions">
+              <div class="libBtnRow">
+                <button class="btn" data-act="open">열기</button>
+                <button class="btn ghost" data-act="copy">복사</button>
+              </div>
+
+              <div class="libBtnRow">
+                <button class="btn ghost" data-act="editDoc">본문 URL 수정</button>
+              </div>
+
+              <div class="libBtnRow">
+                <button class="btn ghost" data-act="delDoc">본문 URL 삭제</button>
+                <button class="btn danger" data-act="del">삭제</button>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="hint" style="margin-top:10px; word-break:break-word;">검색어: ${escapeHtml(s.query || "")}</div>
       `;
 
       el.querySelector('[data-act="open"]').addEventListener("click", () => {
@@ -817,6 +847,7 @@ function renderLibrary() {
         const res = promptDocUrl({ doc_url: s.doc_url });
         if (res.canceled) return;
         if (!res.ok) return toast(res.err || "본문 URL 수정 실패");
+
         patchSource(s.id, { doc_url: res.value });
         toast(res.value ? "본문 URL 수정됨" : "본문 URL 삭제됨");
         renderLibrary();
@@ -825,6 +856,7 @@ function renderLibrary() {
       el.querySelector('[data-act="delDoc"]').addEventListener("click", () => {
         if (!clean(s.doc_url)) return toast("본문 URL이 없어요.");
         if (!confirm("본문 URL만 삭제할까? (검색 링크는 유지됨)")) return;
+
         patchSource(s.id, { doc_url: "" });
         toast("본문 URL 삭제됨");
         renderLibrary();
