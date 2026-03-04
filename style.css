@@ -1,15 +1,10 @@
 /* style.css (FULL REPLACE)
    archi-law-cl-03 dark UI
 
-   ✅ 이번 수정(정확 반영 / main.js 새 구조 대응)
-   - (a1→a2) 좌측 stats 블록 살짝 위로
-   - 제목이 세로로 쪼개지는 현상 방지(최우선)
-   - 저장소 카드 줄 구조(예시 고정):
-     1) title
-     2) sub
-     3) 검색어(3번째 줄) 1줄 ... 처리
-     4) b 라인(.libMetaLine) 1줄 + 가로스크롤(숨김)
-     5) c 라인(.libActionsLine) 1줄 + 가로스크롤(숨김)
+   ✅ 이번 수정 반영
+   1) stats: "소스 3" / "토픽 태그 3" -> 한 줄 + 숫자 우측 정렬 + 높이 고정(a1=a2 느낌)
+   2) 저장소 b1: metaPill 박스 줄(.libMetaLine) 굵게
+   3) 저장소 5줄 버튼: 폰트/패딩 축소해서 "삭제"까지 한 화면에 최대한 들어오게
 */
 
 :root{
@@ -38,8 +33,6 @@ body{
     var(--bg);
   color:var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, "Apple SD Gothic Neo", "Noto Sans KR", Segoe UI, Roboto, Arial, sans-serif;
-
-  /* 데스크탑: 페이지 전체 스크롤 금지 */
   overflow:hidden;
 }
 
@@ -291,20 +284,8 @@ select option{ background-color: #070b14; color: var(--text); }
 }
 
 /* =========================
-   Badges / Pills
+   Pills
 ========================= */
-.badge{
-  display:inline-flex;
-  align-items:center;
-  padding: 7px 10px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.10);
-  font-size:12px;
-  color: rgba(233,238,252,.92);
-}
-.badge.soft{background: rgba(43,108,255,.12); border-color: rgba(43,108,255,.18);}
-
 .metaPill{
   display:inline-flex;
   align-items:center;
@@ -319,7 +300,7 @@ select option{ background-color: #070b14; color: var(--text); }
 .metaPill.warn{background: rgba(245,158,11,.12); border-color: rgba(245,158,11,.20);}
 
 /* =========================
-   Items (result cards)
+   Result items
 ========================= */
 .list{display:flex; flex-direction:column; gap:12px;}
 .item{
@@ -357,7 +338,7 @@ select option{ background-color: #070b14; color: var(--text); }
 #inpFilter, #btnClearFilter,
 .leftColumn .row.split{ display:none !important; }
 
-/* ✅ stats (a1→a2) 살짝 위로 */
+/* ✅ stats: 숫자 우측정렬 + 한줄 + 높이 고정 */
 .stats{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -365,13 +346,27 @@ select option{ background-color: #070b14; color: var(--text); }
   margin-top: -6px;
 }
 .stat{
+  height: 54px;                 /* ✅ 높이 고정 -> a1 정렬선 안정 */
+  display:flex;                 /* ✅ 한줄 */
+  align-items:center;
+  justify-content:space-between;/* ✅ 숫자 우측 */
   padding: 10px 12px;
   border-radius: 16px;
   border:1px solid var(--line);
   background: rgba(0,0,0,.22);
 }
-.stat .k{ color: rgba(167,176,199,.90); font-size:12px; line-height: 1.1; }
-.stat .v{ font-size:20px; font-weight:900; margin-top: 6px; line-height: 1.05; }
+.stat .k{
+  color: rgba(167,176,199,.90);
+  font-size:12px;
+  line-height: 1;
+  margin:0;
+}
+.stat .v{
+  font-size:20px;
+  font-weight:900;
+  line-height: 1;
+  margin:0;
+}
 
 /* 저장소 리스트 스크롤 */
 #libList{
@@ -384,7 +379,7 @@ select option{ background-color: #070b14; color: var(--text); }
 }
 #libList::-webkit-scrollbar{ width: 0; height: 0; }
 
-/* ✅ 저장소 카드 */
+/* 저장소 카드 */
 .libItem{
   padding: 14px;
   border-radius: 16px;
@@ -392,24 +387,13 @@ select option{ background-color: #070b14; color: var(--text); }
   background: rgba(0,0,0,.18);
 }
 
-/* ✅ main.js 새 구조 컨테이너 */
-.libCard{
-  display:flex;
-  flex-direction:column;
-  gap: 0;
-  min-width:0;
-}
-
-/* ✅ 제목 세로쪼개짐 방지(최우선) */
+/* 제목 세로쪼개짐 방지 */
 .libItem .title{
   font-weight:900;
   letter-spacing:.1px;
-
   word-break: keep-all;
   overflow-wrap: normal;
   white-space: normal;
-
-  /* 혹시 폭이 극단적으로 좁아도 글자 단위로 쪼개지지 않도록 */
   line-break: strict;
 }
 .libItem .sub{
@@ -418,7 +402,7 @@ select option{ background-color: #070b14; color: var(--text); }
   font-size:12px;
 }
 
-/* ✅ 3번째 줄(검색어): 1줄 ... */
+/* 3번째 줄: 검색어 ... */
 .libQueryLine{
   margin-top:10px;
   word-break:normal;
@@ -427,38 +411,35 @@ select option{ background-color: #070b14; color: var(--text); }
   text-overflow:ellipsis;
 }
 
-/* ✅ 4번째 줄(b 라인): 1줄 + 가로스크롤(숨김) */
+/* 4번째 줄(b1): pill 한줄 + 스크롤 */
 .libMetaLine{
   margin-top:10px;
   display:flex;
   align-items:center;
-  gap: 10px;
+  gap:8px;
 
   flex-wrap:nowrap;
   white-space:nowrap;
   overflow-x:auto;
   overflow-y:hidden;
 
-  color: rgba(233,238,252,.92);
-  font-size:12px;
-
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 .libMetaLine::-webkit-scrollbar{ width:0; height:0; }
 
-/* b 라인이 텍스트라서 너무 붙어보이면 약간 톤 다운 */
-.libMetaLine{
-  color: rgba(167,176,199,.92);
+/* ✅ b1 글씨 굵게(요청) */
+.libMetaLine .metaPill{
+  font-weight: 900;
 }
 
-/* ✅ 5번째 줄(c 라인): 버튼 1줄 + 가로스크롤(숨김) */
+/* 5번째 줄(c): 버튼 한줄 + 스크롤 (하지만 최대한 카드 폭에 맞춤) */
 .libActionsLine{
   margin-top:10px;
   display:flex;
   align-items:center;
   justify-content:flex-start;
-  gap:10px;
+  gap:8px;
 
   flex-wrap:nowrap;
   white-space:nowrap;
@@ -470,18 +451,12 @@ select option{ background-color: #070b14; color: var(--text); }
 }
 .libActionsLine::-webkit-scrollbar{ width:0; height:0; }
 
-.leftColumn .libItem .btn{
-  padding: 9px 12px;
-  border-radius: 14px;
-}
-
-/* =========================
-   (호환) 예전 구조가 남아있어도 깨지지 않게
-========================= */
-.libRow, .libLeft, .libRight,
-.libItem .tags, .libActions, .libBtnRow{
-  /* 새 구조에서는 안 쓰지만, 남아있어도 레이아웃 폭주 방지 */
-  max-width: 100%;
+/* ✅ 버튼 크기/글씨 줄여서 “삭제”까지 보이게(가능한 범위) */
+.libActionsLine .btn{
+  padding: 7px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 /* =========================
@@ -519,25 +494,7 @@ select option{ background-color: #070b14; color: var(--text); }
   .bigResult > :not(.ctxBar){ overflow:visible; }
   #libList{ overflow:visible; }
 
-  /* 모바일은 가로스크롤보다 “보이는 것” 우선 */
+  /* 모바일: 보이는 게 우선 */
   .libMetaLine{ flex-wrap:wrap; white-space:normal; overflow:visible; }
   .libActionsLine{ flex-wrap:wrap; white-space:normal; overflow:visible; }
-}
-
-/* =========================
-   CSS 로딩 확인용 스탬프
-========================= */
-body::after{
-  content: "CSS v2026-03-04.4";
-  position: fixed;
-  right: 12px;
-  bottom: 10px;
-  padding: 6px 8px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.16);
-  background: rgba(0,0,0,.55);
-  color: rgba(233,238,252,.85);
-  font-size: 12px;
-  z-index: 99999;
-  pointer-events: none;
 }
