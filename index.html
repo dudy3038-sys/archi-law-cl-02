@@ -5,7 +5,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>archi-law-cl-03 | 건축 토픽엔진</title>
-  <link rel="stylesheet" href="./style.css" />
+
+  <!-- ✅ 캐시 무력화: 배포마다 v 숫자만 올리면 됨 -->
+  <link rel="stylesheet" href="./style.css?v=3" />
 </head>
 
 <body>
@@ -27,7 +29,6 @@
   <section class="card compact topFilterBar" id="selectBar">
     <div class="topFilterInner">
       <div class="topFilterLeft">
-        <!-- (작은 화면에서만 보이도록 CSS에서 제어) -->
         <div class="topFilterTitle">선택</div>
 
         <div class="topFilterFields">
@@ -53,7 +54,6 @@
             <select id="selTopic" class="select"></select>
           </div>
 
-          <!-- ✅ 체크박스: 토픽 옆(같은 줄) -->
           <div class="field fieldToggles" aria-label="포함 옵션">
             <div class="fieldLabel">&nbsp;</div>
             <div class="topFilterToggles">
@@ -112,6 +112,7 @@
   </div>
 </main>
 
-<script type="module" src="./main.js"></script>
+<!-- ✅ 캐시 무력화: 배포마다 v 숫자만 올리면 됨 -->
+<script type="module" src="./main.js?v=3"></script>
 </body>
 </html>
