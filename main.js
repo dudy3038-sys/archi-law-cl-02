@@ -1,12 +1,16 @@
 // main.js (FULL REPLACE)
 // archi-law-cl-03
 // ✅ B 레이아웃 고정(토글/모드개념 제거)
-// ✅ 루트 B(본문 URL 직접 연결) + 법제처 종류별(법령/행정규칙/자치법규) 검색 분기
+// ✅ law.go.kr 종류별(법령/행정규칙/자치법규/별표) 검색 분기
+//
+// 정리 포인트(깔끔한 코드 정책)
+// - 숨김 UI(저장소 필터) 기능/이벤트 완전 제거
+// - 구버전 호환(inpSigungu/dlSigungu) 제거: select 기반 확정
 //
 // 핵심 동작
 // 1) 열기/복사: doc_url 우선, 없으면 search_url
 // 2) 결과 카드에 "본문URL 저장(연결)" 추가 (prompt로 입력)
-// 3) 저장소에서 URL 수정 / 본문URL 삭제 가능
+// 3) 저장소에서 본문URL 수정/삭제 가능
 // 4) doc_url 최소 검증: http(s) + law.go.kr
 // 5) 상위법 항목은 kind(LAW/ADM)로 검색 탭 정확히 분기
 
@@ -291,7 +295,7 @@ function lawUrl(kind, query) {
   if (kind === "ADM") return `https://www.law.go.kr/admRulSc.do?query=${q}`;
   if (kind === "BYL") return `https://www.law.go.kr/lsBylSc.do?query=${q}`;
   if (kind === "ORD") return `https://www.law.go.kr/ordinSc.do?menuId=3&subMenuId=27&tabMenuId=139&query=${q}`;
-  return `https://www.law.go.kr/lsSc.do?query=${q}`;
+  return `https://www.law.go.kr/lsSc.do?query=${q}`; // LAW (default)
 }
 
 function buildUpperLawQuery(lawName) {
@@ -413,35 +417,27 @@ function removeSource(id) {
 }
 
 /* =========================
-   시군구: select 우선
+   시군구: select 기반 확정
 ========================= */
 
 function getSigunguValue() {
   const sel = $("selSigungu");
-  if (sel) return clean(sel.value);
-  const inp = $("inpSigungu"); // 구버전 호환
-  if (inp) return clean(inp.value);
-  return "";
+  return sel ? clean(sel.value) : "";
 }
 
 function resetSigunguUI() {
   const sel = $("selSigungu");
   if (sel) sel.value = "";
-  const inp = $("inpSigungu");
-  if (inp) inp.value = "";
 }
 
 function setSigunguOptionsForSido(sido) {
   const list = (SIGUNGU_BY_SIDO[sido] ?? []).slice().sort((a, b) => a.localeCompare(b, "ko-KR"));
   const sel = $("selSigungu");
-  if (sel) {
-    sel.innerHTML =
-      `<option value="">(시군구 선택)</option>` +
-      list.map((x) => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
-  }
+  if (!sel) return;
 
-  const dl = $("dlSigungu"); // 구버전 datalist 호환
-  if (dl) dl.innerHTML = list.map((x) => `<option value="${escapeHtml(x)}"></option>`).join("");
+  sel.innerHTML =
+    `<option value="">(시군구 선택)</option>` +
+    list.map((x) => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
 }
 
 /* =========================
@@ -466,7 +462,9 @@ function initSelects() {
       SIDO_LIST.map((s) => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
   }
   if (selUse) {
-    selUse.innerHTML = USES.map((u) => `<option value="${escapeHtml(u.code)}">${escapeHtml(u.label)}</option>`).join("");
+    selUse.innerHTML = USES
+      .map((u) => `<option value="${escapeHtml(u.code)}">${escapeHtml(u.label)}</option>`)
+      .join("");
   }
   if (selTopic) {
     selTopic.innerHTML =
@@ -554,8 +552,10 @@ function promptDocUrl(existing) {
     "",
     "※ law.go.kr + http(s) 만 허용",
   ].join("\n");
+
   const input = prompt(msg, cur || "");
   if (input == null) return { ok: false, canceled: true };
+
   const val = clean(input);
   if (!val) return { ok: true, value: "" };
   if (!isValidDocUrl(val)) return { ok: false, canceled: false, err: "law.go.kr 본문 URL만 저장 가능해." };
@@ -636,8 +636,8 @@ function renderResultLists(ctx) {
                   const res = promptDocUrl({ doc_url });
                   if (res.canceled) return;
                   if (!res.ok) return toast(res.err || "URL 저장 실패");
-                  const newDoc = res.value;
 
+                  const newDoc = res.value;
                   upsertSource({
                     type: kind === "ADM" ? "행정규칙" : "상위법",
                     kind,
@@ -715,8 +715,8 @@ function renderResultLists(ctx) {
                 const res = promptDocUrl({ doc_url });
                 if (res.canceled) return;
                 if (!res.ok) return toast(res.err || "URL 저장 실패");
-                const newDoc = res.value;
 
+                const newDoc = res.value;
                 upsertSource({
                   type: "자치법규",
                   kind: "ORD",
@@ -754,36 +754,23 @@ function renderResultLists(ctx) {
 }
 
 /* =========================
-   저장소 렌더링
+   저장소 렌더링 (필터 기능 제거 버전)
 ========================= */
 
 function renderLibrary() {
   const lib = loadLibrary();
   const sources = Object.values(lib.sources ?? {});
   const listEl = $("libList");
-  const filter = clean($("inpFilter")?.value).toLowerCase();
-
-  const filtered = !filter
-    ? sources
-    : sources.filter((s) => {
-        const hay = [
-          s.type, s.kind, s.name, s.jurisdiction,
-          ...(s.topics ?? []),
-          ...(s.uses ?? []),
-          s.query,
-          s.search_url,
-          s.doc_url,
-        ].join(" ").toLowerCase();
-        return hay.includes(filter);
-      });
 
   if ($("statSources")) $("statSources").textContent = String(sources.length);
-  if ($("statTags")) $("statTags").textContent = String(sources.reduce((acc, s) => acc + (s.topics?.length ?? 0), 0));
+  if ($("statTags")) {
+    $("statTags").textContent = String(sources.reduce((acc, s) => acc + (s.topics?.length ?? 0), 0));
+  }
 
   if (!listEl) return;
   listEl.innerHTML = "";
 
-  filtered
+  sources
     .sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)))
     .forEach((s) => {
       const el = document.createElement("div");
@@ -808,7 +795,7 @@ function renderLibrary() {
           <div style="display:flex; gap:8px; align-items:flex-start; flex-wrap:wrap; justify-content:flex-end;">
             <button class="btn" data-act="open">열기</button>
             <button class="btn ghost" data-act="copy">복사</button>
-            <button class="btn ghost" data-act="editUrl">URL 수정</button>
+            <button class="btn ghost" data-act="editDoc">본문 URL 수정</button>
             <button class="btn ghost" data-act="delDoc">본문 URL 삭제</button>
             <button class="btn danger" data-act="del">삭제</button>
           </div>
@@ -820,15 +807,16 @@ function renderLibrary() {
         if (!openUrl) return toast("열 URL이 없어.");
         window.open(openUrl, "_blank", "noopener,noreferrer");
       });
+
       el.querySelector('[data-act="copy"]').addEventListener("click", () => {
         if (!openUrl) return toast("복사할 URL이 없어.");
         copyToClipboard(openUrl);
       });
 
-      el.querySelector('[data-act="editUrl"]').addEventListener("click", () => {
+      el.querySelector('[data-act="editDoc"]').addEventListener("click", () => {
         const res = promptDocUrl({ doc_url: s.doc_url });
         if (res.canceled) return;
-        if (!res.ok) return toast(res.err || "URL 수정 실패");
+        if (!res.ok) return toast(res.err || "본문 URL 수정 실패");
         patchSource(s.id, { doc_url: res.value });
         toast(res.value ? "본문 URL 수정됨" : "본문 URL 삭제됨");
         renderLibrary();
@@ -852,8 +840,8 @@ function renderLibrary() {
       listEl.appendChild(el);
     });
 
-  if (filtered.length === 0) {
-    listEl.innerHTML = `<div class="hint">저장된 항목이 없습니다. (또는 필터 결과 없음)</div>`;
+  if (sources.length === 0) {
+    listEl.innerHTML = `<div class="hint">저장된 항목이 없습니다.</div>`;
   }
 }
 
@@ -876,13 +864,6 @@ function bindEvents() {
     const { sido, sigungu } = v.ctx;
     const q = buildOrdinanceQueryBase({ sido, sigungu });
     await copyToClipboard(q);
-  });
-
-  on($("inpFilter"), "input", () => renderLibrary());
-  on($("btnClearFilter"), "click", () => {
-    const inp = $("inpFilter");
-    if (inp) inp.value = "";
-    renderLibrary();
   });
 
   on($("btnReset"), "click", () => {

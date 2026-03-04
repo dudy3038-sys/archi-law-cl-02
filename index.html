@@ -1,3 +1,4 @@
+<!-- index.html (FULL REPLACE) -->
 <!doctype html>
 <html lang="ko">
 <head>
@@ -17,26 +18,16 @@
   </div>
 
   <div class="topbarRight">
-    <!-- ✅ A/B 모드 토글(스위치 UI) -->
-    <div class="abToggle" id="abToggle" role="group" aria-label="레이아웃 모드 전환">
-      <!-- 실제 상태 저장/복원은 main.js에서 처리 -->
-      <button type="button" class="abBtn" data-mode="A" aria-pressed="true" title="A 모드">A</button>
-      <button type="button" class="abBtn" data-mode="B" aria-pressed="false" title="B 모드">B</button>
-      <!-- 스위치 thumb(시각 요소). CSS로 폰 토글처럼 만들 예정 -->
-      <span class="abThumb" aria-hidden="true">A</span>
-    </div>
-
     <button id="btnReset" class="btn danger">초기화</button>
   </div>
 </header>
 
 <main class="layout">
-
-  <!-- ✅ TOP FILTER BAR (전체화면에서만 상단 가로바처럼 보이도록 CSS에서 배치) -->
+  <!-- ✅ TOP FILTER BAR -->
   <section class="card compact topFilterBar" id="selectBar">
     <div class="topFilterInner">
-      <!-- 좌측: 선택 요소들 -->
       <div class="topFilterLeft">
+        <!-- (작은 화면에서만 보이도록 CSS에서 제어) -->
         <div class="topFilterTitle">선택</div>
 
         <div class="topFilterFields">
@@ -61,32 +52,27 @@
             <div class="fieldLabel">토픽 *</div>
             <select id="selTopic" class="select"></select>
           </div>
-        </div>
 
-        <div class="topFilterToggles">
-          <label><input id="chkIncludeAct" type="checkbox" checked /> 상위법 포함</label>
-          <label><input id="chkIncludeOrdin" type="checkbox" checked /> 자치법규 포함</label>
+          <!-- ✅ 체크박스: 토픽 옆(같은 줄) -->
+          <div class="field fieldToggles" aria-label="포함 옵션">
+            <div class="fieldLabel">&nbsp;</div>
+            <div class="topFilterToggles">
+              <label><input id="chkIncludeAct" type="checkbox" checked /> 상위법 포함</label>
+              <label><input id="chkIncludeOrdin" type="checkbox" checked /> 자치법규 포함</label>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- 우측: 결과 생성 버튼 -->
       <div class="topFilterRight">
         <button id="btnBuild" class="btn primary">결과 생성</button>
       </div>
     </div>
   </section>
 
-  <!-- 🔵 LEFT COLUMN : 저장소만 (선택은 상단 바로 이동했으니 저장소가 위로 당겨짐) -->
+  <!-- 🔵 LEFT COLUMN -->
   <div class="leftColumn">
     <section class="card">
-      <h2>저장소</h2>
-
-      <!-- (현재는 그대로 둠: 필요하면 다음 단계에서 검색/지우기 제거 가능) -->
-      <div class="row split">
-        <input id="inpFilter" class="input" placeholder="검색…" />
-        <button id="btnClearFilter" class="btn ghost">지우기</button>
-      </div>
-
       <div class="stats">
         <div class="stat">
           <div class="k">소스</div>
@@ -105,8 +91,6 @@
   <!-- 🔴 RIGHT COLUMN -->
   <div class="rightColumn">
     <section class="card bigResult">
-      <h2>결과</h2>
-
       <div id="ctxBar" class="ctxBar">
         <span class="badge" id="bSido">-</span>
         <span class="badge" id="bSigungu">-</span>
@@ -126,7 +110,6 @@
       </div>
     </section>
   </div>
-
 </main>
 
 <script type="module" src="./main.js"></script>

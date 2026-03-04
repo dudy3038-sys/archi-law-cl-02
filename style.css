@@ -1,14 +1,13 @@
 /* style.css (FULL REPLACE)
    archi-law-cl-03 dark UI
 
-   ✅ 최종 정책(고정)
-   - A모드/토글/모드전환 전부 폐기
-   - 화면이 큰 경우(>=1101px): 선택바(상단 span 2) + 아래 좌(저장소) / 우(결과)  ← B 레이아웃 고정
+   ✅ 정책(고정)
+   - A/B 토글/모드개념 없음 (B 레이아웃 고정)
+   - 큰 화면(>=1101px): 상단 선택바 + 아래 좌(저장소)/우(결과)
    - 작은 화면(<1101px): 세로 스택
-   - 저장소/결과 스크롤 유지 + 스크롤바 숨김
-   - 결과 상단 여백 최소화(내용 위로 당김)
-   - 선택바: 결과생성 버튼은 필드와 세로 중앙 정렬, 체크박스는 필드 아래줄(토픽 아래)로 내림
-   - 토픽 select 너비는 다른 select와 동일하게
+   - 페이지 스크롤 금지(내부 스크롤만) + 스크롤바 숨김
+   - 선택바: 체크박스(상위법/자치법규 포함) = 토픽 옆(같은 줄)
+   - 선택바/결과 상단 여백 최소화
 */
 
 /* =========================
@@ -48,7 +47,6 @@ body{
 /* =========================
    Topbar
 ========================= */
-
 .topbar{
   height:68px;
   display:flex;
@@ -77,9 +75,8 @@ body{
 }
 
 /* =========================
-   Layout (항상 B)
+   Layout (B 고정)
 ========================= */
-
 .layout{
   height: calc(100vh - 68px);
   display:grid;
@@ -97,37 +94,33 @@ body{
 .rightColumn{ grid-area: right; }
 
 /* =========================
-   Top Filter Bar (항상 B 스타일)
+   Top Filter Bar
 ========================= */
-
 .topFilterBar{
-  /* ✅ 선택바 높이(Z→Y) 줄이기 */
-  padding: 10px 12px;
+  padding: 8px 10px; /* ✅ 높이 축소 */
 }
 
 .topFilterInner{
   display:flex;
-  align-items:center;              /* ✅ 버튼/필드 세로 중앙 정렬 */
+  align-items:center;
   justify-content:space-between;
-  gap: 12px;
+  gap: 10px;
 }
 
-/* 좌측: 1줄(fields) + 2줄(toggles) */
 .topFilterLeft{
   display:flex;
   flex-direction:column;
   align-items:flex-start;
-  gap: 6px;
+  gap: 0;
   min-width:0;
 }
 
-/* 타이틀은 높이만 늘려서 숨김 */
+/* 작은 화면에서만 보여줄 타이틀 (기본은 숨김) */
 .topFilterTitle{ display:none; }
 
-/* 필드 1줄 고정 */
 .topFilterFields{
   display:flex;
-  align-items:center;
+  align-items:flex-end;
   gap: 10px;
   flex-wrap:nowrap;
   min-width:0;
@@ -140,45 +133,50 @@ body{
 .fieldLabel{
   font-size:12px;
   color: rgba(233,238,252,.85);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
-/* ✅ 토픽도 다른 select와 동일 폭 */
-#selTopic{
-  min-width: 0;
-  width: 100%;
-}
+/* ✅ 토픽도 동일 폭 */
+#selTopic{ min-width: 0; width: 100%; }
 
-/* ✅ 체크박스는 토픽 아래(2줄) */
+/* ✅ 체크박스: 토픽 옆 같은 줄 */
 .topFilterToggles{
   display:flex;
   align-items:center;
-  gap: 14px;
-  flex-wrap:wrap;
+  gap: 12px;
+  flex-wrap:nowrap;
   white-space:nowrap;
   color: rgba(233,238,252,.85);
   font-size:13px;
-  margin-top: 2px;
+  margin-left: 6px;
 }
 
-/* 우측: 결과 생성 버튼 */
+.topFilterToggles label{
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  line-height: 1;
+}
+.topFilterToggles input[type="checkbox"]{
+  transform: translateY(-0.5px);
+}
+
 .topFilterRight{
   display:flex;
-  align-items:center;            /* ✅ 토픽과 같은 중앙 높이 */
+  align-items:center;
   justify-content:flex-end;
   flex: 0 0 auto;
 }
 
 #btnBuild{
   width:auto;
-  min-width: 160px;
+  min-width: 150px;
   padding: 10px 14px;
 }
 
 /* =========================
-   Left / Right Columns
+   Columns
 ========================= */
-
 .leftColumn{
   height:100%;
   overflow:hidden;
@@ -197,7 +195,6 @@ body{
 /* =========================
    Card / Panel
 ========================= */
-
 .card{
   background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
   border:1px solid var(--line);
@@ -205,31 +202,24 @@ body{
   box-shadow: var(--shadow);
   padding:16px;
 }
+.card.compact{padding:14px}
 
-.card.compact{padding:16px}
-
-.card h2{
-  margin:0 0 14px;
-  font-size:18px;
+/* (보험) 혹시 남아있을 수 있는 h2 숨김 */
+.leftColumn .card > h2,
+.bigResult > h2{
+  display:none !important;
 }
 
 /* =========================
-   Result (상단 여백 최소화)
+   Result (여백 축소)
 ========================= */
-
 .bigResult{
   height:100%;
   overflow:hidden;
   display:flex;
   flex-direction:column;
   min-height:0;
-
-  /* ✅ 내용 위로 당김 */
-  padding-top: 12px;
-}
-
-.bigResult > h2{
-  margin: 0 0 8px;
+  padding-top: 8px; /* ✅ 더 위로 */
 }
 
 .ctxBar{
@@ -238,7 +228,7 @@ body{
   align-items:center;
   justify-content:flex-start;
   gap:10px;
-  padding: 10px 10px;
+  padding: 8px 10px;
   border-radius: 16px;
   border:1px solid var(--line);
   background: rgba(0,0,0,.22);
@@ -254,12 +244,12 @@ body{
   white-space: nowrap;
 }
 
-/* ctxBar 아래만 스크롤 + 스크롤바 UI 숨김 */
+/* ctxBar 아래만 스크롤 + 스크롤바 숨김 */
 .bigResult > :not(.ctxBar){
   flex: 1 1 auto;
   min-height:0;
   overflow:auto;
-  padding-bottom: 18px;
+  padding-bottom: 14px;
 
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -270,7 +260,7 @@ body{
 }
 
 .panel{
-  margin-top: 10px;
+  margin-top: 8px;
   padding: 14px;
   border-radius: 16px;
   border:1px solid var(--line);
@@ -286,7 +276,6 @@ body{
 /* =========================
    Form
 ========================= */
-
 .select, .input{
   width:100%;
   padding: 12px 12px;
@@ -300,7 +289,6 @@ body{
   -webkit-appearance: none;
   appearance: none;
 
-  /* ✅ 닫힌 상태에서 휠로 값 튐 최소화 */
   overflow: hidden;
 }
 
@@ -317,7 +305,6 @@ select option{
 /* =========================
    Buttons
 ========================= */
-
 .btn{
   padding: 10px 14px;
   border-radius: 14px;
@@ -352,7 +339,6 @@ select option{
 /* =========================
    Badges
 ========================= */
-
 .badge{
   display:inline-flex;
   align-items:center;
@@ -368,7 +354,6 @@ select option{
 /* =========================
    Items
 ========================= */
-
 .list{display:flex; flex-direction:column; gap:12px;}
 
 .item{
@@ -410,26 +395,22 @@ select option{
 /* =========================
    Library
 ========================= */
-
-.leftColumn .card:last-child{
+.leftColumn .card{
   flex: 1 1 auto;
   min-height:0;
   display:flex;
   flex-direction:column;
 }
 
-/* ✅ 저장소 필터 UI 제거 + 공백 제거 */
-#inpFilter,
-#btnClearFilter{
-  display:none !important;
-}
-.leftColumn .card:last-child .row.split{
+/* (index에서 제거했지만, 혹시 남아있을 경우 대비) */
+#inpFilter, #btnClearFilter,
+.leftColumn .row.split{
   display:none !important;
   margin:0 !important;
   padding:0 !important;
 }
 
-/* 저장소 리스트만 스크롤 + 스크롤바 UI 숨김 */
+/* 저장소 리스트만 스크롤 + 스크롤바 숨김 */
 #libList{
   flex: 1 1 auto;
   min-height:0;
@@ -449,7 +430,7 @@ select option{
   display:grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-top: 12px;
+  margin-top: 0;
 }
 
 .stat{
@@ -475,7 +456,6 @@ select option{
 /* =========================
    Responsive (작은 화면: 세로 스택)
 ========================= */
-
 @media (max-width: 1100px){
   body{overflow:auto;}
 
@@ -494,9 +474,10 @@ select option{
   .topFilterLeft{
     flex-direction:column;
     align-items:stretch;
+    gap: 8px;
   }
 
-  /* 작은 화면에서는 타이틀 다시 보여도 OK */
+  /* 작은 화면에서는 타이틀 보여주기 */
   .topFilterTitle{
     display:block;
     font-size:16px;
@@ -508,6 +489,12 @@ select option{
   .topFilterFields{
     display:flex;
     flex-wrap:wrap;
+    align-items:flex-end;
+  }
+
+  .topFilterToggles{
+    flex-wrap:wrap;
+    margin-left: 0;
   }
 
   .topFilterRight{
